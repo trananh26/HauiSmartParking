@@ -1,0 +1,256 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{F6F8153E-7D25-4E66-9653-606AD3F41DFA}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Auto_parking</RootNamespace>
+    <AssemblyName>Auto_parking</AssemblyName>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+    <TargetFrameworkProfile>
+    </TargetFrameworkProfile>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <PlatformTarget>x86</PlatformTarget>
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <PlatformTarget>AnyCPU</PlatformTarget>
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <Prefer32Bit>false</Prefer32Bit>
+  </PropertyGroup>
+  <PropertyGroup>
+    <ApplicationIcon>Searchallwreckers-Car-Audi-TT.ico</ApplicationIcon>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="AForge.Video">
+      <HintPath>lib\AForge.Video.dll</HintPath>
+    </Reference>
+    <Reference Include="AForge.Video.DirectShow">
+      <HintPath>lib\AForge.Video.DirectShow.dll</HintPath>
+    </Reference>
+    <Reference Include="Control">
+      <HintPath>lib\Control.dll</HintPath>
+    </Reference>
+    <Reference Include="Emgu.CV">
+      <HintPath>lib\Emgu.CV.dll</HintPath>
+    </Reference>
+    <Reference Include="Emgu.CV.ML">
+      <HintPath>lib\Emgu.CV.ML.dll</HintPath>
+    </Reference>
+    <Reference Include="Emgu.CV.UI">
+      <HintPath>lib\Emgu.CV.UI.dll</HintPath>
+    </Reference>
+    <Reference Include="Emgu.Util">
+      <HintPath>lib\Emgu.Util.dll</HintPath>
+    </Reference>
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="microsoft.office.interop.excel">
+      <HintPath>lib\microsoft.office.interop.excel.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="stdole, Version=17.0.0.0, Culture=neutral, PublicKeyToken=b03f5f7f11d50a3a, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>lib\stdole.dll</HintPath>
+      <EmbedInteropTypes>True</EmbedInteropTypes>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+    <Reference Include="tesseractengine3">
+      <HintPath>lib\tesseractengine3.dll</HintPath>
+    </Reference>
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Database\clsCommon.cs" />
+    <Compile Include="Database\DLDatabase.cs" />
+    <Compile Include="FindContours.cs" />
+    <Compile Include="frmCarSystem.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmCarSystem.Designer.cs">
+      <DependentUpon>frmCarSystem.cs</DependentUpon>
+    </Compile>
+    <Compile Include="frmHistory.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmHistory.Designer.cs">
+      <DependentUpon>frmHistory.cs</DependentUpon>
+    </Compile>
+    <Compile Include="ImageForm.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="ImageForm.Designer.cs">
+      <DependentUpon>ImageForm.cs</DependentUpon>
+    </Compile>
+    <Compile Include="MainFormtest.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="MainFormtest.Designer.cs">
+      <DependentUpon>MainFormtest.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>Resources.resx</DependentUpon>
+    </Compile>
+    <Compile Include="WEBCAM.cs" />
+    <Compile Include="XINIFILE.cs" />
+    <EmbeddedResource Include="frmCarSystem.resx">
+      <DependentUpon>frmCarSystem.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="frmHistory.resx">
+      <DependentUpon>frmHistory.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="ImageForm.resx">
+      <DependentUpon>ImageForm.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="MainFormtest.resx">
+      <DependentUpon>MainFormtest.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <SubType>Designer</SubType>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <None Include="App_Data\data\eng.cube.bigrams" />
+    <None Include="App_Data\data\eng.cube.fold" />
+    <None Include="App_Data\data\eng.cube.lm" />
+    <None Include="App_Data\data\eng.cube.nn" />
+    <None Include="App_Data\data\eng.cube.params" />
+    <None Include="App_Data\data\eng.cube.size" />
+    <None Include="App_Data\data\eng.cube.word-freq" />
+    <None Include="App_Data\data\eng.tesseract_cube.nn" />
+    <None Include="App_Data\data\eng.traineddata" />
+    <None Include="App_Data\ImageTest\dfbdab.xlsx" />
+    <None Include="App_Data\ImageTest\Thumbs.db" />
+    <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include=".gitignore" />
+    <Content Include="App_Data\data\aa.bmp" />
+    <Content Include="App_Data\data\b.bmp" />
+    <Content Include="App_Data\ImageTest\11059925-xexin8.jpg" />
+    <Content Include="App_Data\ImageTest\11270327_896981600368358_5654267662891161986_o.jpg" />
+    <Content Include="App_Data\ImageTest\15_36_1310988590_14_vnm_2011_366495.jpg" />
+    <Content Include="App_Data\ImageTest\5-8.jpg" />
+    <Content Include="App_Data\ImageTest\BBVNr7D.jpg" />
+    <Content Include="App_Data\ImageTest\bien-so-xe-73-cua-tinh-nao.jpg" />
+    <Content Include="App_Data\ImageTest\crv.jpg" />
+    <Content Include="App_Data\ImageTest\HV-000.bmp" />
+    <Content Include="App_Data\ImageTest\HV-002.bmp" />
+    <Content Include="App_Data\ImageTest\HV-003.bmp" />
+    <Content Include="App_Data\ImageTest\HV-004.bmp" />
+    <Content Include="App_Data\ImageTest\HV-005.bmp" />
+    <Content Include="App_Data\ImageTest\HV-006.bmp" />
+    <Content Include="App_Data\ImageTest\HV-009.bmp" />
+    <Content Include="App_Data\ImageTest\HV-010.bmp" />
+    <Content Include="App_Data\ImageTest\HV-011.bmp" />
+    <Content Include="App_Data\ImageTest\HV-012.bmp" />
+    <Content Include="App_Data\ImageTest\HV-013.bmp" />
+    <Content Include="App_Data\ImageTest\HV-014.bmp" />
+    <Content Include="App_Data\ImageTest\HV-015.bmp" />
+    <Content Include="App_Data\ImageTest\HV-016.bmp" />
+    <Content Include="App_Data\ImageTest\HV-017.bmp" />
+    <Content Include="App_Data\ImageTest\HV-018.bmp" />
+    <Content Include="App_Data\ImageTest\HV-019.bmp" />
+    <Content Include="App_Data\ImageTest\HV-021.bmp" />
+    <Content Include="App_Data\ImageTest\HV-022.bmp" />
+    <Content Include="App_Data\ImageTest\HV-023.bmp" />
+    <Content Include="App_Data\ImageTest\HV-024.bmp" />
+    <Content Include="App_Data\ImageTest\HV-026.bmp" />
+    <Content Include="App_Data\ImageTest\HV-028.jpg" />
+    <Content Include="App_Data\ImageTest\HV-029.bmp" />
+    <Content Include="App_Data\ImageTest\images.jpg" />
+    <Content Include="App_Data\ImageTest\tra-cuu-bien-so-xe-2.jpg" />
+    <Content Include="lib\opencv_calib3d240.dll" />
+    <Content Include="lib\opencv_contrib240.dll" />
+    <Content Include="lib\opencv_core240.dll" />
+    <Content Include="lib\opencv_features2d240.dll" />
+    <Content Include="lib\opencv_ffmpeg240.dll" />
+    <Content Include="lib\opencv_flann240.dll" />
+    <Content Include="lib\opencv_gpu240.dll" />
+    <Content Include="lib\opencv_highgui240.dll" />
+    <Content Include="lib\opencv_imgproc240.dll" />
+    <Content Include="lib\opencv_legacy240.dll" />
+    <Content Include="lib\opencv_ml240.dll" />
+    <Content Include="lib\opencv_nonfree240.dll" />
+    <Content Include="lib\opencv_objdetect240.dll" />
+    <Content Include="lib\opencv_photo240.dll" />
+    <Content Include="lib\opencv_stitching240.dll" />
+    <Content Include="lib\opencv_video240.dll" />
+    <Content Include="lib\opencv_videostab240.dll" />
+    <Content Include="Searchallwreckers-Car-Audi-TT.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include=".NETFramework,Version=v4.5">
+      <Visible>False</Visible>
+      <ProductName>Microsoft .NET Framework 4.5 %28x86 and x64%29</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

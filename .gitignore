@@ -1,0 +1,120 @@
+# .gitignore cho Ứng dụng .NET Desktop
+
+## Thư mục Build
+```
+bin/
+obj/
+Debug/
+Release/
+x64/
+x86/
+```
+
+## Tệp Visual Studio
+```
+.vs/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+```
+
+## Tệp Visual Studio Code
+```
+.vscode/
+```
+
+## Tệp Rider
+```
+.idea/
+```
+
+## Gói NuGet
+```
+*.nupkg
+packages/
+.nuget/
+```
+
+## Kết quả Build
+```
+*.dll
+*.exe
+*.pdb
+*.cache
+*.ilk
+*.log
+*.vspscc
+*.vssscc
+```
+
+## Tệp cá nhân người dùng
+```
+*.rsuser
+*.suo
+*.user
+*.userprefs
+```
+
+## Tệp tự động sinh
+```
+*.Designer.cs
+*.Generated.cs
+*.g.cs
+*.g.i.cs
+```
+
+## Khác
+```
+_ReSharper*/
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+```
+
+## Thư mục xuất bản
+```
+publish/
+```
+
+## Tệp SQL Server
+```
+*.mdf
+*.ldf
+```
+
+## Khác
+```
+*.dbmdl
+*.bak
+*.backup
+```
+
+## Bộ nhớ cache ảnh Windows
+```
+Thumbs.db
+ehthumbs.db
+```
+
+## Tệp cấu hình thư mục
+```
+Desktop.ini
+```
+
+## Thùng rác trên file share
+```
+$RECYCLE.BIN/
+```
+
+## Tệp cài đặt Windows Installer
+```
+*.cab
+*.msi
+*.msm
+*.msp
+```
+
+## JetBrains Rider
+```
+.idea/
+*.sln.iml
+```
