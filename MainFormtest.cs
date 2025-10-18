@@ -25,11 +25,7 @@ namespace Auto_parking
         private string o_Sensor;
         private bool IsFire;
         delegate void MyDelegate();
-        private bool mInputRequire = true;
-        private bool mOutputRequire = true;
-        private string _outPlate = "";
-        private int _capCount = 0;
-        private string IPData = "";
+
         public MainForm()
         {
             InitializeComponent();
@@ -140,8 +136,6 @@ namespace Auto_parking
                                 lblOutputTime.Visible = true;
                                 lblInputTime.Visible = true;
                                 lblMoney.Visible = true;
-                                DateTime _inputTime;
-                                DateTime _outputTime;
                                 DataTable dt = new DataTable();
                                 dt = cls.GetInfor(mathe.Substring(2, mathe.Length - 2), bienso);
 
@@ -528,9 +522,7 @@ namespace Auto_parking
         VideoCaptureDevice captureDevice1;
         VideoCaptureDevice captureDevice2;
 
-
         private void GetCameraInfor()
-
         {
             try
             {
@@ -542,14 +534,16 @@ namespace Auto_parking
                 captureDevice1.NewFrame += CaptureDevice1_NewFrame;
                 captureDevice1.Start();
 
-                captureDevice2 = new VideoCaptureDevice(filterInfo[1].MonikerString);
+                var cam2Index = filterInfo.Count > 1 ? 1 : 0;
+                captureDevice2 = new VideoCaptureDevice(filterInfo[cam2Index].MonikerString);
                 captureDevice2.NewFrame += CaptureDevice2_NewFrame;
                 captureDevice2.Start();
             }
-            catch (Exception)
+            catch (Exception ex)
             {
-
-                MessageBox.Show("Không tìm thấy thông tin camera. Vuui lòng kiểm tra lại", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Không tìm thấy thông tin camera. Vui lòng kiểm tra lại!", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                Console.WriteLine($"{ex}");
+                Application.Exit();
             }
 
         }

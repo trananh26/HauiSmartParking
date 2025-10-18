@@ -24,7 +24,6 @@ namespace Auto_parking
                     bitmap.PixelFormat);
 
                 int channels = Image.GetPixelFormatSize(bitmap.PixelFormat) / 8;
-                DepthType depth = DepthType.Cv8U;
 
                 using (Mat tempMat = new Mat(bitmap.Height, bitmap.Width, DepthType.Cv8U, channels, data.Scan0, data.Stride))
                 {

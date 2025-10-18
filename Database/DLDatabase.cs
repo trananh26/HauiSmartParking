@@ -14,9 +14,7 @@ namespace Auto_parking
         private static string ConnectionString = connString;
         private SqlConnection conn = new SqlConnection(ConnectionString);
         private SqlCommand cmd = new SqlCommand();
-        private SqlDataReader dr;
         private SqlDataAdapter da;
-
 
         /// <summary>
         /// Thêm lịch sử 
@@ -42,9 +40,9 @@ namespace Auto_parking
                 cmd.ExecuteNonQuery();
                 conn.Close();
             }
-            catch (Exception ee)
+            catch (Exception ex)
             {
-
+                Console.WriteLine($"{ex}");
             }
         }
 
@@ -67,9 +65,9 @@ namespace Auto_parking
                 da.Fill(dt);
                 conn.Close();
             }
-            catch (Exception ee)
+            catch (Exception ex)
             {
-
+                Console.WriteLine($"{ex}");
             }
 
             return dt;
@@ -100,9 +98,9 @@ namespace Auto_parking
                 cmd.ExecuteNonQuery();
                 conn.Close();
             }
-            catch (Exception ee)
+            catch (Exception ex)
             {
-
+                Console.WriteLine($"{ex}");
             }
         }
     }
