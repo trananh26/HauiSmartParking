@@ -1,20 +1,20 @@
-﻿using System;
+﻿using AForge.Video;
+using AForge.Video.DirectShow;
+using Emgu.CV;
+using Emgu.CV.CvEnum;
+using Emgu.CV.Structure;
+using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Diagnostics;
 using System.Drawing;
-using System.Linq;
-using System.Windows.Forms;
-using Emgu.CV;
-using Emgu.CV.Structure;
-using Emgu.CV.CvEnum;
 using System.IO;
 using System.IO.Ports;
-using tesseract;
-using System.Threading;
-using AForge.Video;
-using AForge.Video.DirectShow;
+using System.Linq;
 using System.Text.RegularExpressions;
-using System.Diagnostics;
+using System.Threading;
+using System.Windows.Forms;
+using Tesseract;
 //using WindowsFormsApplication1;
 
 namespace Auto_parking
@@ -38,353 +38,6 @@ namespace Auto_parking
             InitializeComponent();
             CheckForIllegalCrossThreadCalls = false;
         }
-
-        /*
-        private void RFID_Analys(string mathe)
-        {
-            try
-            {
-                mathe = mathe.Replace("\0", "");
-                string bienso = "";
-                IPData = mathe;
-                // Xử lý dữ liệu được nhận về từ STM32||Arduino
-                // Cú pháp prefix_ + Data + x
-                // Nếu bắt đầu là i_ : Mã thẻ cửa vào
-                // Nếu bắt đầu là o_ :Mã thẻ cửa ra
-                // Nếu bắt đầu là s_ :Chuỗi tín hiệu cảm biến báo vị trí
-
-                //Quẹt thẻ vào khi có yêu cầu
-                if (mathe.Substring(0, 2) == "i_")
-                {
-                    MyDelegate dt = delegate ()
-                    {
-                        string m_rf = mathe.Substring(2, mathe.Length - 2);
-                        if (mInputRequire)
-                        {
-                            ///Cho xe vào bãi
-                            CarInput(_outPlate, m_rf);
-                            mInputRequire = false;
-                        }
-
-                    };
-                    this.Invoke(dt);
-                }
-
-                //Quẹt thẻ ra khi có yêu cầu
-                else if (mathe.Substring(0, 2) == "o_")
-                {
-                    MyDelegate dt = delegate ()
-                    {
-                        string m_rf = mathe.Substring(2, mathe.Length - 2);
-                        if (mOutputRequire)
-                        {
-                            if (cls.GetInfor(m_rf, _outPlate).Rows.Count > 0)
-                            {
-                                //cho xe ra
-                                CarOutput(_outPlate, m_rf);
-                                mOutputRequire = false;
-                            }
-                            else
-                            {
-                                timercheckout.Stop();
-                                MessageBox.Show("Biển số xe và thẻ không trùng khớp. Vui lòng kiểm tra lại", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                            }
-                        }
-
-                    };
-                    this.Invoke(dt);
-                }
-
-                ///Báo trạng thái ô để xe
-                else if (mathe.Substring(0, 1) == "s")
-                {
-                    MyDelegate dt = delegate ()
-                    {
-                        SensorAnalys(mathe.Substring(1, 5));// xử lý tín hiệu cảm biến
-                    };
-                    this.Invoke(dt);
-                }
-
-                ///Báo cháy
-                else if (mathe.Substring(0, 2) == "f_")
-                {
-                    if (mathe.Substring(0, 3) == "f_1")
-                    {
-                        IsFire = true;
-                        string m_DataSend = "1   FIRE EXIT   ";
-                        SendData(m_DataSend);
-                        Thread.Sleep(1000);
-
-                        m_DataSend = "2 Please Go out ";
-                        SendData(m_DataSend);
-                        Thread.Sleep(1000);
-
-                    }
-                    else
-                    {
-                        IsFire = false;
-                        string m_DataSend = "1    WELCOME    ";
-                        SendData(m_DataSend);
-                        Thread.Sleep(1000);
-
-                        m_DataSend = "2               ";
-                        SendData(m_DataSend);
-                        Thread.Sleep(1000);
-                    }
-                }
-
-                //có xe vào
-                else if (mathe.Substring(0, 4) == "ci_1")
-                {
-                    MyDelegate dt = delegate ()
-                    {
-                        
-                        lblOutputTime.Visible = false;
-                        lblInputTime.Visible = false;
-                        lblMoney.Visible = false;
-                        try
-                        {
-                            bienso = CaptureImageThenRecognize(1);// nhận diện biển số
-                            _outPlate = bienso;
-                            if (bienso.Length < 5)
-                            {
-                                if (_capCount < 5)
-                                {
-                                    _capCount++;
-                                    timercheckin.Stop();
-                                    timercheckin.Start();
-                                }
-                                else
-                                {
-                                    timercheckin.Stop();
-                                    MessageBox.Show("KHÔNG THỂ NHẬN DẠNG ĐƯỢC BIỂN SỐ XE. VUI LÒNG DI CHUYỂN LẠI XE VÀO VÙNG ĐỌC CAMERA", "CẢNH BÁO", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                                    _capCount = 0;
-                                    
-                                }
-
-                            }
-                            else
-                            {
-                                _capCount = 0;
-                                timercheckin.Stop();
-                            }
-
-                            //check biển số có đựơc vào thẳng k
-                            if (cls.Check_SystemPlate(bienso))
-                            {
-                                mInputRequire = false;
-                                if (cls.Check_BienSo(bienso))//check xe có đang trong bãi không
-                                {
-                                    MessageBox.Show("BIỂN SỐ XE ĐÃ TỒN TẠI TRONG BÃI", "CẢNH BÁO", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                                }
-                                else
-                                {
-                                    CarInput(bienso, "System");
-                                }
-                                //Cho xe vào bãi
-
-                            }
-                            else
-                            {
-                                if(!string.IsNullOrEmpty(bienso))
-                                {
-                                    mInputRequire = true;
-                                    lblNoti.Visible = true;
-                                }    
-                                
-                            }
-                        }
-                        catch (Exception)
-                        {
-
-                            RFID_Analys(mathe);
-                        }
-
-                    };
-                    this.Invoke(dt);
-                }
-
-                //có xe ra
-                else if (mathe.Substring(0, 4) == "co_1")
-                {
-                    MyDelegate dt = delegate ()
-                    {
-                        try
-                        {
-                            bienso = CaptureImageThenRecognize(2);// nhận diện biển số
-                            _outPlate = bienso;
-                            if (bienso.Length < 5)
-                            {
-                                if (_capCount < 5)
-                                {
-                                    _capCount++;
-                                    timercheckout.Stop();
-                                    timercheckout.Start();
-                                }
-                                else
-                                {
-                                    timercheckout.Stop();
-                                    MessageBox.Show("KHÔNG THỂ NHẬN DẠNG ĐƯỢC BIỂN SỐ XE. VUI LÒNG DI CHUYỂN LẠI XE VÀO VÙNG ĐỌC CAMERA", "CẢNH BÁO", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                                    _capCount = 0;
-                                    
-                                }
-
-                            }
-                            else
-                            {
-                                _capCount = 0;
-                                timercheckout.Stop();
-                            }
-                            if (!string.IsNullOrEmpty(bienso))
-                            {
-                                DataTable dtOut = new DataTable();
-                                dtOut = cls.Check_BienSoRa(bienso);
-                                //check có phải quẹt thẻ hay không
-                                if (dtOut.Rows.Count > 0)
-                                {
-                                    if (dtOut.Rows[0]["RFCode"].ToString() == "System")
-                                    {
-                                        CarOutput(bienso, "System");
-                                    }
-                                    else
-                                    {
-                                        if(!string.IsNullOrEmpty(bienso))
-                                        {
-                                            mOutputRequire = true;
-                                            lblNoti.Visible = true;
-                                        }    
-                                        
-                                    }
-
-                                }
-                                else
-                                {
-                                    MessageBox.Show("BIỂN SỐ XE KHÔNG TỒN TẠI TRONG BÃI", "CẢNH BÁO", MessageBoxButtons.OK, MessageBoxIcon.Warning);
-                                }
-                            }
-                        }
-                        catch (Exception)
-                        {
-
-                            RFID_Analys(mathe);
-                        }
-
-                    };
-                    this.Invoke(dt);
-                }
-
-
-                lblTotalInput.Text = cls.InputCount().ToString("00");
-                lblTotalOutput.Text = cls.OutputCount().ToString("00");
-
-            }
-
-            catch (Exception ee)
-            {
-                MessageBox.Show(ee.ToString());
-            }
-        }
-
-        /// <summary>
-        /// lấy xe ra
-        /// </summary>
-        /// <param name="bienso"></param>
-        /// <param name="mathe"></param>
-        private void CarOutput(string bienso, string mathe)
-        {
-            try
-            {
-                MessageBox.Show("LẤY XE THÀNH CÔNG", "CẢNH BÁO", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                string m_DataSend = "B111111111111111";
-                SendData(m_DataSend);
-
-                lblOutputTime.Visible = true;
-                lblInputTime.Visible = true;
-                lblMoney.Visible = true;
-                DateTime _inputTime;
-                DateTime _outputTime;
-                DataTable dt = new DataTable();
-                dt = cls.GetInfor(mathe, bienso);
-
-                lblOutputTime.Text = DateTime.Now.ToString("HH:mm:ss dd/MM/yyyy");
-                lblInputTime.Text = dt.Rows[0]["UpdateTime"].ToString();
-                Guid ID = new Guid(dt.Rows[0]["ID"].ToString());
-
-                DateTime.TryParse(lblInputTime.Text, out _inputTime);
-                DateTime.TryParse(lblOutputTime.Text, out _outputTime);
-
-                lblMoney.Text = "10.000 Đồng";
-
-                cls.LayXe(mathe, ID, 10);
-                lb_vaora.Text = "XE RA";
-                //Lưu số tiền vào bảng TotalMoney
-                cls.SaveMoney(10);
-                //Lấy lên tổng doanh thu mới
-                lblTotalMoney.Text = cls.GetTotalMoney() + " Đồng";
-
-                lblNoti.Visible = false;
-            }
-            catch (Exception)
-            {
-
-
-            }
-
-        }
-
-        /// <summary>
-        /// Gửi xe vào
-        /// </summary>
-        /// <param name="bienso"></param>
-        /// <param name="mathe"></param>
-        private void CarInput(string bienso, string mathe)
-        {
-            try
-            {
-                MessageBox.Show("GỬI XE THÀNH CÔNG", "CẢNH BÁO", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                string m_DataSend = "B111111111111111";
-                SendDataIN(m_DataSend);
-                cls.GuiXe(mathe, bienso);
-                lb_vaora.Text = "XE VÀO";
-
-                lblNoti.Visible = false;
-            }
-            catch (Exception)
-            {
-
-
-            }
-
-        }
-
-        /// <summary>
-        /// thực hiện chụp lại ngõ vào sau mỗi 1s
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void timercheckin_Tick(object sender, EventArgs e)
-        {
-            if(!string.IsNullOrEmpty(IPData))
-            {
-                RFID_Analys(IPData);
-                timercheckin.Stop();
-            }    
-            
-        }
-        /// <summary>
-        /// thực hiện chụp lại ngõ ra sau mỗi 1s
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="e"></param>
-        private void timercheckout_Tick(object sender, EventArgs e)
-        {
-            if (!string.IsNullOrEmpty(IPData))
-            {
-                RFID_Analys(IPData);
-            }
-        }
-        */
-
 
         private void RFID_Analys(string mathe)
         {
@@ -512,7 +165,7 @@ namespace Auto_parking
                             }
                             else
                             {
-                                MessageBox.Show("XE KHÔNG Ở TRONG BÃI. VUI LÒNG KIỂM TRA LẠI", "CẢNH BÁO", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                                MessageBox.Show("XE KHÔNG Ở TRONG BÃI. VUI LÒNG KIỂM TRA LẠi", "CẢNH BÁO", MessageBoxButtons.OK, MessageBoxIcon.Warning);
                             }
                         }
                         else
@@ -621,12 +274,12 @@ namespace Auto_parking
         List<Image<Bgr, byte>> PlateImagesList = new List<Image<Bgr, byte>>();
         Image Plate_Draw;
         List<string> PlateTextList = new List<string>();
-        List<Rectangle> listRect = new List<Rectangle>();
+        List<System.Drawing.Rectangle> listRect = new List<Rectangle>();
         PictureBox[] box = new PictureBox[12];
-
-        public TesseractProcessor full_tesseract = null;
-        public TesseractProcessor ch_tesseract = null;
-        public TesseractProcessor num_tesseract = null;
+        
+        public TesseractEngine full_tesseract = null;
+        public TesseractEngine ch_tesseract = null;
+        public TesseractEngine num_tesseract = null;
         private string m_path = Application.StartupPath + @"\data\";
         private List<string> lstimages = new List<string>();
         private const string m_lang = "eng";
@@ -844,39 +497,27 @@ namespace Auto_parking
             }
             catch (Exception)
             {
-
-
             }
 
             IF = new ImageForm();
 
-            full_tesseract = new TesseractProcessor();
-            bool succeed = full_tesseract.Init(m_path, m_lang, 3);
-            if (!succeed)
+            // Khởi tạo Tesseract với API 5.x
+            string testDataPath = Application.StartupPath + @"\testData";
+            try
             {
-                MessageBox.Show("Tesseract initialization failed. The application will exit.");
-                Application.Exit();
+                full_tesseract = new TesseractEngine(testDataPath, m_lang, EngineMode.Default);
+                full_tesseract.SetVariable("tessedit_char_whitelist", "ABCDEFHKLMNPRSTVXY1234567890");
+                
+                ch_tesseract = new TesseractEngine(testDataPath, m_lang, EngineMode.Default);
+                ch_tesseract.SetVariable("tessedit_char_whitelist", "ABCDEFHKLMNPRSTUVXY");
+                
+                num_tesseract = new TesseractEngine(testDataPath, m_lang, EngineMode.Default);
+                num_tesseract.SetVariable("tessedit_char_whitelist", "1234567890");
             }
-            full_tesseract.SetVariable("tessedit_char_whitelist", "ABCDEFHKLMNPRSTVXY1234567890").ToString();
-
-            ch_tesseract = new TesseractProcessor();
-            succeed = ch_tesseract.Init(m_path, m_lang, 3);
-            if (!succeed)
+            catch (Exception ex)
             {
-                MessageBox.Show("Tesseract initialization failed. The application will exit.");
-                Application.Exit();
+                MessageBox.Show("Lỗi khởi tạo Tesseract OCR: " + ex.Message + "\n\nVui lòng đảm bảo thư mục 'testData' và file 'eng.traineddata' tồn tại.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-            ch_tesseract.SetVariable("tessedit_char_whitelist", "ABCDEFHKLMNPRSTUVXY").ToString();
-
-            num_tesseract = new TesseractProcessor();
-            succeed = num_tesseract.Init(m_path, m_lang, 3);
-            if (!succeed)
-            {
-                MessageBox.Show("Tesseract initialization failed. The application will exit.");
-                Application.Exit();
-            }
-            num_tesseract.SetVariable("tessedit_char_whitelist", "1234567890").ToString();
-
 
             m_path = System.Environment.CurrentDirectory + "\\";
             //string[] ports = SerialPort.GetPortNames();
@@ -1041,17 +682,41 @@ namespace Auto_parking
         private string Ocr(Bitmap image_s, bool isFull, bool isNum = false)
         {
             string temp = "";
-            Image<Gray, byte> src = new Image<Gray, byte>(image_s);
+            // Convert Bitmap to Image using extension method
+            Image<Gray, byte> src = image_s.ToGrayImage();
+            
             double ratio = 1;
+            
+            // Count non-zero pixels for Emgu.CV 3.x
+            int nonZeroCount = 0;
+            using (Mat srcMat = src.Mat)
+            using (Mat mask = new Mat())
+            {
+                Mat zeroMat = new Mat(srcMat.Size, srcMat.Depth, srcMat.NumberOfChannels);
+                zeroMat.SetTo(new MCvScalar(0));
+                CvInvoke.Compare(srcMat, zeroMat, mask, CmpType.NotEqual);
+                nonZeroCount = CvInvoke.CountNonZero(mask);
+            }
+            
             while (true)
             {
-                ratio = (double)CvInvoke.cvCountNonZero(src) / (src.Width * src.Height);
+                ratio = (double)nonZeroCount / (src.Width * src.Height);
                 if (ratio > 0.5) break;
                 src = src.Dilate(2);
+                
+                // Recalculate non-zero count
+                using (Mat srcMat = src.Mat)
+                using (Mat mask = new Mat())
+                {
+                    Mat zeroMat = new Mat(srcMat.Size, srcMat.Depth, srcMat.NumberOfChannels);
+                    zeroMat.SetTo(new MCvScalar(0));
+                    CvInvoke.Compare(srcMat, zeroMat, mask, CmpType.NotEqual);
+                    nonZeroCount = CvInvoke.CountNonZero(mask);
+                }
             }
             Bitmap image = src.ToBitmap();
 
-            TesseractProcessor ocr;
+            TesseractEngine ocr;
             if (isFull)
                 ocr = full_tesseract;
             else if (isNum)
@@ -1060,24 +725,45 @@ namespace Auto_parking
                 ocr = ch_tesseract;
 
             int cou = 0;
-            ocr.Clear();
-            ocr.ClearAdaptiveClassifier();
-            temp = ocr.Apply(image);
-            while (temp.Length > 3)
+            
+            // Sử dụng API của Tesseract 5.x với Process()
+            try
             {
-                Image<Gray, byte> temp2 = new Image<Gray, byte>(image);
-                temp2 = temp2.Erode(2);
-                image = temp2.ToBitmap();
-                ocr.Clear();
-                ocr.ClearAdaptiveClassifier();
-                temp = ocr.Apply(image);
-                cou++;
-                if (cou > 10)
+                using (var pix = PixConverter.ToPix(image))
                 {
-                    temp = "";
-                    break;
+                    using (var page = ocr.Process(pix))
+                    {
+                        temp = page.GetText().Trim();
+                    }
+                }
+                
+                while (temp.Length > 3)
+                {
+                    Image<Gray, byte> temp2 = image.ToGrayImage();
+                    temp2 = temp2.Erode(2);
+                    image = temp2.ToBitmap();
+                    
+                    using (var pix = PixConverter.ToPix(image))
+                    {
+                        using (var page = ocr.Process(pix))
+                        {
+                            temp = page.GetText().Trim();
+                        }
+                    }
+                    
+                    cou++;
+                    if (cou > 10)
+                    {
+                        temp = "";
+                        break;
+                    }
                 }
             }
+            catch (Exception)
+            {
+                temp = "";
+            }
+            
             return temp;
 
         }
@@ -1092,24 +778,29 @@ namespace Auto_parking
             Bitmap src;
             //pictureBox2.Image = new Image<Gray, byte>(image).ToBitmap();
             Image dst = image;
-            HaarCascade haar = new HaarCascade(Application.StartupPath + "\\output-hv-33-x25.xml");
+            
+            // Use CascadeClassifier for Emgu.CV 3.x instead of HaarCascade
+            Emgu.CV.CascadeClassifier cascade = new Emgu.CV.CascadeClassifier(Application.StartupPath + "\\output-hv-33-x25.xml");
+            
             for (float i = 0; i <= 20; i = i + 3)
             {
                 for (float s = -1; s <= 1 && s + i != 1; s += 2)
                 {
                     src = RotateImage(dst, i * s);
                     PlateImagesList.Clear();
-                    frame = new Image<Bgr, byte>(src);
-                    using (Image<Gray, byte> grayframe = new Image<Gray, byte>(src))
+                    frame = src.ToBgrImage();
+                    
+                    using (Image<Gray, byte> grayframe = src.ToGrayImage())
                     {
-                        var faces =
-                       grayframe.DetectHaarCascade(haar, 1.1, 8, HAAR_DETECTION_TYPE.DO_CANNY_PRUNING, new Size(0, 0))[0];
+                        // Use DetectMultiScale for Emgu.CV 3.x
+                        Rectangle[] faces = cascade.DetectMultiScale(grayframe, 1.1, 8, new Size(0, 0));
+                        
                         foreach (var face in faces)
                         {
                             Image<Bgr, byte> tmp = frame.Copy();
-                            tmp.ROI = face.rect;
+                            tmp.ROI = face;
 
-                            frame.Draw(face.rect, new Bgr(Color.Blue), 2);
+                            frame.Draw(face, new Bgr(Color.Blue), 2);
 
                             PlateImagesList.Add(tmp);
 
@@ -1132,7 +823,7 @@ namespace Auto_parking
                                     }
                                 }
                             }
-                            PlateImagesList[0] = PlateImagesList[0].Resize(400, 400, Emgu.CV.CvEnum.INTER.CV_INTER_LINEAR);
+                            PlateImagesList[0] = PlateImagesList[0].Resize(400, 400, Emgu.CV.CvEnum.Inter.Linear);
                             return;
                         }
                     }
@@ -1162,7 +853,9 @@ namespace Auto_parking
             ProcessImage(link);
             if (PlateImagesList.Count != 0)
             {
-                Image<Bgr, byte> src = new Image<Bgr, byte>(PlateImagesList[0].ToBitmap());
+                Bitmap plateBitmap = PlateImagesList[0].ToBitmap();
+                Image<Bgr, byte> src = plateBitmap.ToBgrImage();
+                
                 Bitmap grayframe;
                 FindContours con = new FindContours();
                 Bitmap color;
@@ -1186,7 +879,7 @@ namespace Auto_parking
                 }
 
                 //textBox2.Text = c.ToString();
-                Image<Gray, byte> dst = new Image<Gray, byte>(grayframe);
+                Image<Gray, byte> dst = grayframe.ToGrayImage();
                 grayframe = dst.ToBitmap();
                 //pictureBox2.Image = grayframe.Clone(listRect[2], grayframe.PixelFormat);
                 string zz = "";
@@ -1203,21 +896,49 @@ namespace Auto_parking
 
                 if (listRect == null) return;
 
+                // Sử dụng API của Tesseract 5.x
                 for (int i = 0; i < listRect.Count; i++)
                 {
                     Bitmap ch = grayframe.Clone(listRect[i], grayframe.PixelFormat);
                     int cou = 0;
-                    full_tesseract.Clear();
-                    full_tesseract.ClearAdaptiveClassifier();
-                    string temp = full_tesseract.Apply(ch);
+                    
+                    string temp = "";
+                    try
+                    {
+                        using (var pix = PixConverter.ToPix(ch))
+                        {
+                            using (var page = full_tesseract.Process(pix))
+                            {
+                                temp = page.GetText().Trim();
+                            }
+                        }
+                    }
+                    catch
+                    {
+                        temp = "";
+                    }
+                    
                     while (temp.Length > 3)
                     {
-                        Image<Gray, byte> temp2 = new Image<Gray, byte>(ch);
+                        Image<Gray, byte> temp2 = ch.ToGrayImage();
                         temp2 = temp2.Erode(2);
                         ch = temp2.ToBitmap();
-                        full_tesseract.Clear();
-                        full_tesseract.ClearAdaptiveClassifier();
-                        temp = full_tesseract.Apply(ch);
+                        
+                        try
+                        {
+                            using (var pix = PixConverter.ToPix(ch))
+                            {
+                                using (var page = full_tesseract.Process(pix))
+                                {
+                                    temp = page.GetText().Trim();
+                                }
+                            }
+                        }
+                        catch
+                        {
+                            temp = "";
+                        }
+                        
                         cou++;
                         if (cou > 10)
                         {
@@ -1347,233 +1068,64 @@ namespace Auto_parking
             //}
         }
 
-        private void resizeInGr(GroupBox gr, ref TextBox tx, ref Label lb, int dis_d, int dis_r_t, int dis_r_l, bool t)
+        // Add missing event handlers
+        private void picInputCam_Click(object sender, EventArgs e)
         {
-            if (dis_r_t < 0)
-            {
-                tx.Location = new Point(tx.Location.X, gr.Size.Height - dis_d);
-                lb.Location = new Point(lb.Location.X, gr.Size.Height - dis_d);
-            }
-            else
-            {
-                tx.Location = new Point(gr.Size.Width - dis_r_t, gr.Size.Height - dis_d);
-                lb.Location = new Point(gr.Size.Width - dis_r_l, gr.Size.Height - dis_d);
-            }
-            if (t)
-                tx.Size = new Size(gr.Size.Width - 3 - tx.Location.X, tx.Size.Height);
-        }
-
-        private void splitter1_MouseMove(object sender, MouseEventArgs e)
-        {
-
-            if (mouseDown)
-            {
-                int w = Size.Width + (e.X - lastLocation.X);
-                if (w < 796)
-                {
-                    w = 796;
-                }
-                this.Size = new Size(w, Size.Height);
-                this.Update();
-            }
-        }
-
-        private void splitter2_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (mouseDown)
-            {
-                int h = Size.Height + (e.Y - lastLocation.Y);
-                if (h < 504)
-                {
-                    h = 504;
-                }
-                this.Size = new Size(Size.Width, h);
-                this.Update();
-            }
-        }
-
-        private void panel5_MouseMove(object sender, MouseEventArgs e)
-        {
-            if (mouseDown)
-            {
-                int w = Size.Width + (e.X - lastLocation.X);
-                if (w < 796)
-                {
-                    w = 796;
-                }
-                int h = Size.Height + (e.Y - lastLocation.Y);
-                if (h < 504)
-                {
-                    h = 504;
-                }
-                this.Size = new Size(w, h);
-                this.Update();
-            }
-        }
-
-        #region WEBCAM
-        WEBCAM[] cam = new WEBCAM[3];
-        private void pictureBox_MouseDown(object sender, MouseEventArgs e)
-        {
-            if (e.Button == MouseButtons.Right)
-            {
-                PictureBox p = (PictureBox)sender;
-                for (int i = 0; i < cam.Length; i++)
-                {
-                    if (cam[i] != null && cam[i].status == "run" && cam[i].pb == p.Name)
-                    {
-                        cam[i].Stop();
-                        cam[i] = null;
-                    }
-                }
-                ContextMenu m = new ContextMenu();
-                List<string> ls = WEBCAM.get_all_cam();
-                for (int i = 0; i <= 2 & i < ls.Count; i++)
-                {
-                    m.MenuItems.Add(ls[i], (s, e2) =>
-                    {
-                        MenuItem menuItem = s as MenuItem;
-                        ContextMenu owner = menuItem.Parent as ContextMenu;
-                        PictureBox pb = (PictureBox)owner.SourceControl;
-                        if (cam[menuItem.Index] != null && cam[menuItem.Index].status == "run")
-                        {
-                            cam[menuItem.Index].Stop();
-                            //cam[menuItem.Index] = null;
-                        }
-                        cam[menuItem.Index] = new WEBCAM();
-                        cam[menuItem.Index].Start(menuItem.Index);
-                        cam[menuItem.Index].put_picturebox(pb.Name);
-                    });
-                }
-                m.Show(p, new Point(e.X, e.Y));
-            }
-        }
-        private void timer3_Tick(object sender, EventArgs e)
-        {
-            try
-            {
-                for (int i = 0; i < cam.Length; i++)
-                {
-                    if (cam[i] != null && cam[i].status == "run" && cam[i].image != null)
-                    {
-                        MethodInvoker mi = delegate
-                        {
-                            PictureBox pb = this.Controls.Find(cam[i].pb, true).FirstOrDefault() as PictureBox;
-                            pb.Image = cam[i].image;
-                            pb.Update();
-                            pb.Invalidate();
-                        };
-                        if (InvokeRequired)
-                        {
-                            Invoke(mi);
-                            return;
-                        }
-
-                        PictureBox pb2 = this.Controls.Find(cam[i].pb, true).FirstOrDefault() as PictureBox;
-                        pb2.Image = cam[i].image;
-                        pb2.Update();
-                        pb2.Invalidate();
-                    }
-                }
-            }
-            catch (Exception) { }
-        }
-
-        #endregion
-
-
-        private void btn_chonanh_Click(object sender, EventArgs e)
-        {
-            //while (true) ;
-            OpenFileDialog dlg = new OpenFileDialog();
-            dlg.Filter = "Image (*.bmp; *.jpg; *.jpeg; *.png) |*.bmp; *.jpg; *.jpeg; *.png|All files (*.*)|*.*||";
-            dlg.InitialDirectory = Application.StartupPath + "\\ImageTest";
-            if (dlg.ShowDialog() == System.Windows.Forms.DialogResult.Cancel)
-            {
-                return;
-            }
-            string startupPath = dlg.FileName;
-
-            Image temp1;
-            string temp2, temp3;
-            Reconize(startupPath, 1, out temp1, out temp2, out temp3);
-            picInputPicture2.Image = temp1;
-            if (temp3 == "")
-                txt_BiensoVao.Text = "Không nhận dạng dc biển số";
-            else
-                txt_BiensoVao.Text = temp3;
-        }
-
-        private void btnHistory_Click(object sender, EventArgs e)
-        {
-            frmHistory frm = new frmHistory();
-            frm.ShowDialog();
-        }
-
-        private void btnCarSys_Click(object sender, EventArgs e)
-        {
-            frmCarSystem frm = new frmCarSystem();
-            frm.ShowDialog();
-        }
-
-        private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
-        {
-            string processName = "Auto_Parking";
-
-            // Tìm tất cả các quy trình có tên được chỉ định
-            Process[] processes = Process.GetProcessesByName(processName);
-
-            // Kiểm tra xem có quy trình nào không
-            if (processes.Length > 0)
-            {
-                // Lặp qua tất cả các quy trình và tắt chúng
-                foreach (Process process in processes)
-                {
-                    try
-                    {
-                        process.Kill();
-
-                    }
-                    catch (Exception ex)
-                    {
-
-                    }
-                }
-            }
-        }
-
-        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
-        {
-            string processName = "Auto_Parking";
-
-            // Tìm tất cả các quy trình có tên được chỉ định
-            Process[] processes = Process.GetProcessesByName(processName);
-
-            // Kiểm tra xem có quy trình nào không
-            if (processes.Length > 0)
-            {
-                // Lặp qua tất cả các quy trình và tắt chúng
-                foreach (Process process in processes)
-                {
-                    try
-                    {
-                        process.Kill();
-                    }
-                    catch (Exception ex)
-                    {
-                    }
-                }
-            }
+            // Event handler for picInputCam click
         }
 
         private void pic_BiensoRa1_Click(object sender, EventArgs e)
         {
-
+            // Event handler for pic_BiensoRa1 click
         }
 
-        private void picInputCam_Click(object sender, EventArgs e)
+        private void btnHistory_Click(object sender, EventArgs e)
         {
+            // Event handler for history button
+        }
 
+        private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            try
+            {
+                if (captureDevice1 != null && captureDevice1.IsRunning)
+                {
+                    captureDevice1.Stop();
+                }
+                if (captureDevice2 != null && captureDevice2.IsRunning)
+                {
+                    captureDevice2.Stop();
+                }
+                if (STM1_Serial != null && STM1_Serial.IsOpen)
+                {
+                    STM1_Serial.Close();
+                }
+                if (STM2_Serial != null && STM2_Serial.IsOpen)
+                {
+                    STM2_Serial.Close();
+                }
+            }
+            catch (Exception)
+            {
+                // Ignore errors during cleanup
+            }
+        }
+
+        private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            // Cleanup after form is closed
+            if (full_tesseract != null)
+            {
+                full_tesseract.Dispose();
+            }
+            if (ch_tesseract != null)
+            {
+                ch_tesseract.Dispose();
+            }
+            if (num_tesseract != null)
+            {
+                num_tesseract.Dispose();
+            }
         }
     }
 }

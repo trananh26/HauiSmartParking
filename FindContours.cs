@@ -5,6 +5,8 @@ using System.Text;
 using System.Drawing;
 using Emgu.CV;
 using Emgu.CV.Structure;
+using Emgu.CV.Util;
+using Emgu.CV.CvEnum;
 
 namespace Auto_parking
 {
@@ -22,160 +24,72 @@ namespace Auto_parking
         {
             List<Rectangle> listR = new List<Rectangle>();
             #region Conversion To grayscale
-            Image<Gray, byte> grayImage = new Image<Gray, byte>(colorImage);
-            //grayImage = grayImage.Resize(400, 400, Emgu.CV.CvEnum.INTER.CV_INTER_LINEAR);
+            Image<Gray, byte> grayImage = colorImage.ToGrayImage();
+            //grayImage = grayImage.Resize(400, 400, Emgu.CV.CvEnum.Inter.Linear);
             Image<Gray, byte> bi = new Image<Gray, byte>(grayImage.Width, grayImage.Height);
-            Image<Bgr, byte> color = new Image<Bgr, byte>(colorImage);
+            Image<Bgr, byte> color = colorImage.ToBgrImage();
 
             #endregion
 
-
-            #region  Image normalization and inversion (if required)
-
-            ////CvInvoke.cvAdaptiveThreshold(grayImage, grayImage, 255,
-            ////    Emgu.CV.CvEnum.ADAPTIVE_THRESHOLD_TYPE.CV_ADAPTIVE_THRESH_MEAN_C, Emgu.CV.CvEnum.THRESH.CV_THRESH_BINARY, 21, 2);
-            ////string ff = grayImage.GetAverage().Intensity;
-
-            ////grayImage = grayImage.ThresholdBinary(new Gray(grayImage.GetAverage().Intensity / 2.5), new Gray(255));
-
-            ////double thr = cout_avg(grayImage) / 1.5;
-            //double thr = cout_avg_new(grayImage)/1.5;
-            //grayImage = grayImage.ThresholdBinary(new Gray(thr), new Gray(255));
-            ////grayImage = grayImage.Dilate(3);
-            //if (invert)
-            //{
-            //    grayImage._Not();
-            //}
-            //#endregion
-
-            //#region Extracting the Contours
-            //using (MemStorage storage = new MemStorage())
-            //{
-
-            //    Contour<Point> contours = grayImage.FindContours(Emgu.CV.CvEnum.CHAIN_APPROX_METHOD.CV_CHAIN_APPROX_SIMPLE, Emgu.CV.CvEnum.RETR_TYPE.CV_RETR_LIST, storage);
-            //    while (contours != null)
-            //    {
-
-            //        Rectangle rect = contours.BoundingRectangle;
-            //        //Contour<Point> currentContour = contours.ApproxPoly(contours.Perimeter * 0.015, storage);
-            //        //color.Draw(currentContour.BoundingRectangle, new Bgr(0, 255, 0), 1);
-            //        CvInvoke.cvDrawContours(color, contours, new MCvScalar(255, 255, 0), new MCvScalar(0), -1, 1, Emgu.CV.CvEnum.LINE_TYPE.EIGHT_CONNECTED, new Point(0, 0));
-            //        if (rect.Width > 20 && rect.Width < 150
-            //            && rect.Height > 80 && rect.Height < 150)
-            //        {
-            //            count++;
-            //            Contour<Point> currentContour = contours.ApproxPoly(contours.Perimeter * 0.015, storage);
-            //            CvInvoke.cvDrawContours(color, contours, new MCvScalar(0,255,255), new MCvScalar(255), -1, 3, Emgu.CV.CvEnum.LINE_TYPE.EIGHT_CONNECTED, new Point(0, 0));
-
-            //            color.Draw(contours.BoundingRectangle, new Bgr(0, 255, 0), 2);
-            //            bi.Draw(contours, new Gray(255), -1);
-            //            listR.Add(contours.BoundingRectangle);
-
-
-            //        }
-
-            //        contours = contours.HNext;
-
-            //    }
-            //    for (int i = 0; i < count; i++)
-            //    {
-            //        for (int j = i + 1; j < count; j++)
-            //        {
-            //            if(  (listR[j].X < (listR[i].X + listR[i].Width) && listR[j].X > listR[i].X)
-            //                && (listR[j].Y < (listR[i].Y + listR[i].Width) && listR[j].Y > listR[i].Y)  )
-            //            {
-            //                listR.RemoveAt(j);
-            //                count--;
-            //                j --;
-            //            }
-            //            else if(  (listR[i].X < (listR[j].X + listR[j].Width) && listR[i].X > listR[j].X)
-            //                && (listR[i].Y < (listR[j].Y + listR[j].Width) && listR[i].Y > listR[j].Y))
-            //            {
-            //                listR.RemoveAt(i);
-            //                count--;
-            //                i--;
-            //                break;
-            //            }
-
-            //        }
-            //    }
-            //}
-            #endregion
 
             #region tim gia tri thresh de co so ky tu lon nhat
 
-            //Image<Gray, byte> bi2 = new Image<Gray, byte>(grayImage.Width, grayImage.Height);
-            //Image<Bgr, byte> color2 = new Image<Bgr, byte>(colorImage);
-            //double thr = cout_avg_new(grayImage);
             double thr = 0;
             if (thr == 0)
             {
                 thr = grayImage.GetAverage().Intensity;
             }
-            //double thr = 50;
-            //double min = 0, max = 255;
-            //if (thr - 80 > 0)
-            //{
-            //    min = thr - 80;
-            //}
-            //if (thr + 80 < 255)
-            //{
-            //    max = thr + 80;
-            //}
-            //List<Rectangle> list_best = null;
+
             Rectangle[] li = new Rectangle[9];
-            Image<Bgr, byte> color_b = new Image<Bgr, byte>(colorImage); ;
+            Image<Bgr, byte> color_b = colorImage.ToBgrImage();
             Image<Gray, byte> src_b = grayImage.Clone();
             Image<Gray, byte> bi_b = bi.Clone();
             Image<Bgr, byte> color2;
             Image<Gray, byte> src;
             Image<Gray, byte> bi2;
             int c = 0, c_best = 0;
-            //IntPtr a = color_b.Ptr;
-            //CvInvoke.cvReleaseImage(ref a);
+            
             for (double value = 0; value <= 127; value += 3)
             {
                 for (int s = -1; s <= 1 && s + value != 1; s += 2)
                 {
-                    color2 = new Image<Bgr, byte>(colorImage);
-                    //src = grayImage.Clone();
+                    color2 = colorImage.ToBgrImage();
                     bi2 = bi.Clone();
                     listR.Clear();
-                    //list_best.Clear();
                     c = 0;
                     double t = 127 + value * s;
                     src = grayImage.ThresholdBinary(new Gray(t), new Gray(255));
 
-                    using (MemStorage storage = new MemStorage())
+                    // Use FindContours with Emgu.CV 3.x API
+                    using (VectorOfVectorOfPoint contours = new VectorOfVectorOfPoint())
                     {
-
-                        Contour<Point> contours = src.FindContours(Emgu.CV.CvEnum.CHAIN_APPROX_METHOD.CV_CHAIN_APPROX_SIMPLE, Emgu.CV.CvEnum.RETR_TYPE.CV_RETR_LIST, storage);
-                        while (contours != null)
+                        CvInvoke.FindContours(src, contours, null, RetrType.List, ChainApproxMethod.ChainApproxSimple);
+                        
+                        for (int i = 0; i < contours.Size; i++)
                         {
-
-                            Rectangle rect = contours.BoundingRectangle;
-                            CvInvoke.cvDrawContours(color2, contours, new MCvScalar(255, 255, 0), new MCvScalar(0), -1, 1, Emgu.CV.CvEnum.LINE_TYPE.EIGHT_CONNECTED, new Point(0, 0));
-                            double ratio = (double)rect.Width / rect.Height;
-                            if (rect.Width > 20 && rect.Width < 150
-                                && rect.Height > 80 && rect.Height < 180
-                                && ratio > 0.1 && ratio < 1.1 && rect.X > 20)
+                            using (VectorOfPoint contour = contours[i])
                             {
-                                c++;
-                                CvInvoke.cvDrawContours(color2, contours, new MCvScalar(0, 255, 255), new MCvScalar(255), -1, 3, Emgu.CV.CvEnum.LINE_TYPE.EIGHT_CONNECTED, new Point(0, 0));
+                                Rectangle rect = CvInvoke.BoundingRectangle(contour);
+                                
+                                // Draw contours
+                                CvInvoke.DrawContours(color2, contours, i, new MCvScalar(255, 255, 0), 1);
+                                
+                                double ratio = (double)rect.Width / rect.Height;
+                                if (rect.Width > 20 && rect.Width < 150
+                                    && rect.Height > 80 && rect.Height < 180
+                                    && ratio > 0.1 && ratio < 1.1 && rect.X > 20)
+                                {
+                                    c++;
+                                    CvInvoke.DrawContours(color2, contours, i, new MCvScalar(0, 255, 255), 3);
 
-                                color2.Draw(contours.BoundingRectangle, new Bgr(0, 255, 0), 2);
-                                bi2.Draw(contours, new Gray(255), -1);
-                                listR.Add(contours.BoundingRectangle);
-
-
+                                    color2.Draw(rect, new Bgr(Color.Green), 2);
+                                    CvInvoke.DrawContours(bi2, contours, i, new MCvScalar(255), -1);
+                                    listR.Add(rect);
+                                }
                             }
-
-                            contours = contours.HNext;
-
                         }
                     }
-                    //IntPtr a = color_b.Ptr;
-                    //CvInvoke.cvReleaseImage(ref a);
+                    
                     double avg_h = 0;
                     double dis = 0;
                     for (int i = 0; i < c; i++)
@@ -186,7 +100,6 @@ namespace Auto_parking
                             if ((listR[j].X < (listR[i].X + listR[i].Width) && listR[j].X > listR[i].X)
                                 && (listR[j].Y < (listR[i].Y + listR[i].Width) && listR[j].Y > listR[i].Y))
                             {
-                                //avg_h -= listR[j].Height;
                                 listR.RemoveAt(j);
                                 c--;
                                 j--;
@@ -216,11 +129,6 @@ namespace Auto_parking
                         color_b = color2;
                         bi_b = bi2;
                         src_b = src;
-                        //dis_b = dis;
-                        //if (c == 8)
-                        //{
-                        //    break;
-                        //}
                     }
                 }
                 if (c_best == 8) break;
@@ -236,8 +144,6 @@ namespace Auto_parking
                 if (li[i].Height != 0) listR.Add(li[i]);
             }
 
-
-
             #endregion
 
             #region Asigning output
@@ -247,30 +153,32 @@ namespace Auto_parking
             #endregion
             return count;
         }
+        
         private double cout_avg(Image<Gray, byte> src)
         {
             double d = 0;
             List<Rectangle> lsR = new List<Rectangle>();
             Image<Gray, byte> grayImage = new Image<Gray, byte>(src.Width, src.Height);
-            CvInvoke.cvAdaptiveThreshold(src, grayImage, 255,
-                Emgu.CV.CvEnum.ADAPTIVE_THRESHOLD_TYPE.CV_ADAPTIVE_THRESH_MEAN_C, Emgu.CV.CvEnum.THRESH.CV_THRESH_BINARY, 21, 2);
+            CvInvoke.AdaptiveThreshold(src, grayImage, 255, AdaptiveThresholdType.MeanC, ThresholdType.Binary, 21, 2);
             grayImage = grayImage.Dilate(3);
             grayImage = grayImage.Erode(3);
 
-            using (MemStorage storage = new MemStorage())
+            using (VectorOfVectorOfPoint contours = new VectorOfVectorOfPoint())
             {
-                Contour<Point> contours = grayImage.FindContours(Emgu.CV.CvEnum.CHAIN_APPROX_METHOD.CV_CHAIN_APPROX_SIMPLE, Emgu.CV.CvEnum.RETR_TYPE.CV_RETR_LIST, storage);
-                while (contours != null)
+                CvInvoke.FindContours(grayImage, contours, null, RetrType.List, ChainApproxMethod.ChainApproxSimple);
+                
+                for (int i = 0; i < contours.Size; i++)
                 {
-
-                    Rectangle rect = contours.BoundingRectangle;
-
-                    if (rect.Width > 50 && rect.Width < 150
-                        && rect.Height > 80 && rect.Height < 150)
+                    using (VectorOfPoint contour = contours[i])
                     {
-                        lsR.Add(rect);
+                        Rectangle rect = CvInvoke.BoundingRectangle(contour);
+
+                        if (rect.Width > 50 && rect.Width < 150
+                            && rect.Height > 80 && rect.Height < 150)
+                        {
+                            lsR.Add(rect);
+                        }
                     }
-                    contours = contours.HNext;
                 }
             }
 
@@ -278,37 +186,39 @@ namespace Auto_parking
             {
                 Bitmap tmp = src.ToBitmap();
                 Bitmap tmp2 = tmp.Clone(lsR[i], tmp.PixelFormat);
-                Image<Gray, byte> tmp3 = new Image<Gray, byte>(tmp2);
+                Image<Gray, byte> tmp3 = tmp2.ToGrayImage();
                 d += tmp3.GetAverage().Intensity / lsR.Count;
             }
 
             return d;
         }
+        
         private double cout_avg_new(Image<Gray, byte> src)
         {
             double d = 0;
             List<Rectangle> lsR = new List<Rectangle>();
             Image<Gray, byte> grayImage = new Image<Gray, byte>(src.Width, src.Height);
 
-            CvInvoke.cvAdaptiveThreshold(src, grayImage, 255,
-                Emgu.CV.CvEnum.ADAPTIVE_THRESHOLD_TYPE.CV_ADAPTIVE_THRESH_MEAN_C, Emgu.CV.CvEnum.THRESH.CV_THRESH_BINARY, 21, 2);
+            CvInvoke.AdaptiveThreshold(src, grayImage, 255, AdaptiveThresholdType.MeanC, ThresholdType.Binary, 21, 2);
 
             grayImage = grayImage.Dilate(3);
             grayImage = grayImage.Erode(3);
 
-            using (MemStorage storage = new MemStorage())
+            using (VectorOfVectorOfPoint contours = new VectorOfVectorOfPoint())
             {
-                Contour<Point> contours = grayImage.FindContours(Emgu.CV.CvEnum.CHAIN_APPROX_METHOD.CV_CHAIN_APPROX_SIMPLE, Emgu.CV.CvEnum.RETR_TYPE.CV_RETR_LIST, storage);
-                while (contours != null)
+                CvInvoke.FindContours(grayImage, contours, null, RetrType.List, ChainApproxMethod.ChainApproxSimple);
+                
+                for (int i = 0; i < contours.Size; i++)
                 {
-
-                    Rectangle rect = contours.BoundingRectangle;
-                    if (rect.Width > 50 && rect.Width < 150
-                        && rect.Height > 80 && rect.Height < 150)
+                    using (VectorOfPoint contour = contours[i])
                     {
-                        lsR.Add(rect);
+                        Rectangle rect = CvInvoke.BoundingRectangle(contour);
+                        if (rect.Width > 50 && rect.Width < 150
+                            && rect.Height > 80 && rect.Height < 150)
+                        {
+                            lsR.Add(rect);
+                        }
                     }
-                    contours = contours.HNext;
                 }
             }
 
@@ -316,7 +226,7 @@ namespace Auto_parking
             {
                 Bitmap tmp = src.ToBitmap();
                 Bitmap tmp2 = tmp.Clone(lsR[i], tmp.PixelFormat);
-                Image<Gray, byte> tmp3 = new Image<Gray, byte>(tmp2);
+                Image<Gray, byte> tmp3 = tmp2.ToGrayImage();
                 int T = 0;
                 int T0 = 128;
                 do
@@ -353,7 +263,7 @@ namespace Auto_parking
             , out List<Rectangle> list_out, out int count, Image<Bgr, byte> color, out Image<Bgr, byte> color_out,
             Image<Gray, byte> bi, out Image<Gray, byte> bi_out)
         {
-            List<Rectangle> listR = null, list_best = null;
+            List<Rectangle> listR = new List<Rectangle>(), list_best = new List<Rectangle>();
             Image<Bgr, byte> color2 = color;
             Image<Gray, byte> src = grayImage;
             Image<Gray, byte> bi2 = bi;
@@ -365,31 +275,30 @@ namespace Auto_parking
                 double t = thr / value;
                 src = grayImage.ThresholdBinary(new Gray(t), new Gray(255));
 
-                using (MemStorage storage = new MemStorage())
+                using (VectorOfVectorOfPoint contours = new VectorOfVectorOfPoint())
                 {
-
-                    Contour<Point> contours = src.FindContours(Emgu.CV.CvEnum.CHAIN_APPROX_METHOD.CV_CHAIN_APPROX_SIMPLE, Emgu.CV.CvEnum.RETR_TYPE.CV_RETR_LIST, storage);
-                    while (contours != null)
+                    CvInvoke.FindContours(src, contours, null, RetrType.List, ChainApproxMethod.ChainApproxSimple);
+                    
+                    for (int i = 0; i < contours.Size; i++)
                     {
-
-                        Rectangle rect = contours.BoundingRectangle;
-                        CvInvoke.cvDrawContours(color2, contours, new MCvScalar(255, 255, 0), new MCvScalar(0), -1, 1, Emgu.CV.CvEnum.LINE_TYPE.EIGHT_CONNECTED, new Point(0, 0));
-                        if (rect.Width > 20 && rect.Width < 150
-                            && rect.Height > 80 && rect.Height < 150)
+                        using (VectorOfPoint contour = contours[i])
                         {
-                            c++;
-                            CvInvoke.cvDrawContours(color2, contours, new MCvScalar(0, 255, 255), new MCvScalar(255), -1, 3, Emgu.CV.CvEnum.LINE_TYPE.EIGHT_CONNECTED, new Point(0, 0));
+                            Rectangle rect = CvInvoke.BoundingRectangle(contour);
+                            CvInvoke.DrawContours(color2, contours, i, new MCvScalar(255, 255, 0), 1);
+                            
+                            if (rect.Width > 20 && rect.Width < 150
+                                && rect.Height > 80 && rect.Height < 150)
+                            {
+                                c++;
+                                CvInvoke.DrawContours(color2, contours, i, new MCvScalar(0, 255, 255), 3);
 
-                            color2.Draw(contours.BoundingRectangle, new Bgr(0, 255, 0), 2);
-                            bi2.Draw(contours, new Gray(255), -1);
-                            listR.Add(contours.BoundingRectangle);
-
-
+                                color2.Draw(rect, new Bgr(Color.Green), 2);
+                                CvInvoke.DrawContours(bi2, contours, i, new MCvScalar(255), -1);
+                                listR.Add(rect);
+                            }
                         }
-
-                        contours = contours.HNext;
-
                     }
+                    
                     for (int i = 0; i < c; i++)
                     {
                         for (int j = i + 1; j < c; j++)
@@ -415,7 +324,7 @@ namespace Auto_parking
                 }
                 if (c <= 8 && c > c_best)
                 {
-                    list_best = listR;
+                    list_best = new List<Rectangle>(listR);
                     c_best = c;
                     if (c == 8)
                     {
