@@ -69,11 +69,11 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="BitmapExtension.cs" />
+    <Compile Include="Utils\BitmapExtension.cs" />
     <Compile Include="Database\clsCommon.cs" />
     <Compile Include="Database\DLDatabase.cs" />
-    <Compile Include="EmguExtensions.cs" />
-    <Compile Include="FindContours.cs" />
+    <Compile Include="Utils\EmguExtensions.cs" />
+    <Compile Include="Utils\FindContours.cs" />
     <Compile Include="frmCarSystem.cs">
       <SubType>Form</SubType>
     </Compile>
@@ -86,17 +86,17 @@
     <Compile Include="frmHistory.Designer.cs">
       <DependentUpon>frmHistory.cs</DependentUpon>
     </Compile>
-    <Compile Include="ImageForm.cs">
+    <Compile Include="frmImage.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="ImageForm.Designer.cs">
-      <DependentUpon>ImageForm.cs</DependentUpon>
+    <Compile Include="frmImage.Designer.cs">
+      <DependentUpon>frmImage.cs</DependentUpon>
     </Compile>
-    <Compile Include="MainFormtest.cs">
+    <Compile Include="frmMain.cs">
       <SubType>Form</SubType>
     </Compile>
-    <Compile Include="MainFormtest.Designer.cs">
-      <DependentUpon>MainFormtest.cs</DependentUpon>
+    <Compile Include="frmMain.Designer.cs">
+      <DependentUpon>frmMain.cs</DependentUpon>
     </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
@@ -105,19 +105,19 @@
       <DesignTime>True</DesignTime>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <Compile Include="WEBCAM.cs" />
-    <Compile Include="XINIFILE.cs" />
+    <Compile Include="Utils\WEBCAM.cs" />
+    <Compile Include="Utils\XINIFILE.cs" />
     <EmbeddedResource Include="frmCarSystem.resx">
       <DependentUpon>frmCarSystem.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="frmHistory.resx">
       <DependentUpon>frmHistory.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="ImageForm.resx">
-      <DependentUpon>ImageForm.cs</DependentUpon>
+    <EmbeddedResource Include="frmImage.resx">
+      <DependentUpon>frmImage.cs</DependentUpon>
     </EmbeddedResource>
-    <EmbeddedResource Include="MainFormtest.resx">
-      <DependentUpon>MainFormtest.cs</DependentUpon>
+    <EmbeddedResource Include="frmMain.resx">
+      <DependentUpon>frmMain.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Properties\Resources.resx">
       <Generator>ResXFileCodeGenerator</Generator>
@@ -144,10 +144,6 @@
       <DependentUpon>Settings.settings</DependentUpon>
       <DesignTimeSharedInput>True</DesignTimeSharedInput>
     </Compile>
-    <None Include="readme.md" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
     <Content Include=".gitignore" />

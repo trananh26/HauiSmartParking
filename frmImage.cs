@@ -4,9 +4,9 @@ using System.Windows.Forms;
 
 namespace Auto_parking
 {
-    public partial class ImageForm : Form
+    public partial class frmImage : Form
     {
-        public ImageForm()
+        public frmImage()
         {
             InitializeComponent();
         }

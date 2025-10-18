@@ -21,7 +21,7 @@ namespace Auto_parking
         // object xein;
         delegate void SetTextCallback(string text);
         private clsCommon cls = new clsCommon();
-        private ImageForm IF;
+        private frmImage IF;
         private string o_Sensor;
         private bool IsFire;
         delegate void MyDelegate();
@@ -490,7 +490,7 @@ namespace Auto_parking
             {
             }
 
-            IF = new ImageForm();
+            IF = new frmImage();
 
             // Khởi tạo Tesseract với API 5.x
             string testDataPath = Application.StartupPath + @"\testData";
