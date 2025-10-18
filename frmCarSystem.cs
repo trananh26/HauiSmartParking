@@ -1,11 +1,4 @@
-﻿using Microsoft.Office.Interop.Excel;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
+﻿using System;
 using System.Windows.Forms;
 
 namespace Auto_parking
@@ -29,7 +22,7 @@ namespace Auto_parking
                     LoadData();
 
                     MessageBox.Show("Thêm biển số xe thành công", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);
-                    
+
                 }
                 else
                 {
@@ -47,7 +40,7 @@ namespace Auto_parking
         private void frmHistory_Load(object sender, EventArgs e)
         {
             LoadData();
-           
+
         }
 
         private void LoadData()
@@ -83,7 +76,7 @@ namespace Auto_parking
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            if(! string.IsNullOrEmpty(txtCarPlate.Text))
+            if (!string.IsNullOrEmpty(txtCarPlate.Text))
             {
                 cls.DeleteCarPlate(txtCarPlate.Text);
                 MessageBox.Show("Xóa biển số xe thành công", "Thông báo", MessageBoxButtons.OK, MessageBoxIcon.Information);

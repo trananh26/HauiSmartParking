@@ -1,11 +1,4 @@
-﻿using Microsoft.Office.Interop.Excel;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
+﻿using System;
 using System.Windows.Forms;
 
 namespace Auto_parking
@@ -87,7 +80,7 @@ namespace Auto_parking
 
                 ;
             }
-            
+
         }
 
         private void ExportExcel(DataGridView dgvlichsu, string fileName)
@@ -115,7 +108,7 @@ namespace Auto_parking
 
             oBooks = oExcel.Workbooks;
 
-            oBook = (Microsoft.Office.Interop.Excel.Workbook)(oExcel.Workbooks.Add(Type.Missing));
+            oBook = oExcel.Workbooks.Add(Type.Missing);
 
             oSheets = oBook.Worksheets;
 
@@ -143,7 +136,7 @@ namespace Auto_parking
             for (int i = 0; i < dgvlichsu.ColumnCount; i++)
             {
                 oSheet.Cells[3, i + 1] = dgvlichsu.Columns[i].HeaderText;
-               
+
             }
 
             // nội dung trong bảng
@@ -182,6 +175,6 @@ namespace Auto_parking
             oBook.SaveAs(fileName);
         }
 
-        
+
     }
 }

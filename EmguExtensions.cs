@@ -1,7 +1,7 @@
-using System.Drawing;
-using System.Drawing.Imaging;
 using Emgu.CV;
 using Emgu.CV.Structure;
+using System.Drawing;
+using System.Drawing.Imaging;
 using System.Runtime.InteropServices;
 
 namespace Auto_parking
@@ -18,7 +18,7 @@ namespace Auto_parking
         {
             // Create a new bitmap
             Bitmap bitmap = new Bitmap(image.Width, image.Height, PixelFormat.Format8bppIndexed);
-            
+
             // Set grayscale palette
             ColorPalette palette = bitmap.Palette;
             for (int i = 0; i < 256; i++)
@@ -26,16 +26,16 @@ namespace Auto_parking
                 palette.Entries[i] = Color.FromArgb(i, i, i);
             }
             bitmap.Palette = palette;
-            
+
             // Lock bitmap data
             BitmapData bitmapData = bitmap.LockBits(
                 new Rectangle(0, 0, bitmap.Width, bitmap.Height),
                 ImageLockMode.WriteOnly,
                 PixelFormat.Format8bppIndexed);
-            
+
             // Copy data from Image to Bitmap
             Marshal.Copy(image.Bytes, 0, bitmapData.Scan0, image.Bytes.Length);
-            
+
             // Unlock and return
             bitmap.UnlockBits(bitmapData);
             return bitmap;
@@ -48,16 +48,16 @@ namespace Auto_parking
         {
             // Create a new bitmap
             Bitmap bitmap = new Bitmap(image.Width, image.Height, PixelFormat.Format24bppRgb);
-            
+
             // Lock bitmap data
             BitmapData bitmapData = bitmap.LockBits(
                 new Rectangle(0, 0, bitmap.Width, bitmap.Height),
                 ImageLockMode.WriteOnly,
                 PixelFormat.Format24bppRgb);
-            
+
             // Copy data from Image to Bitmap
             Marshal.Copy(image.Bytes, 0, bitmapData.Scan0, image.Bytes.Length);
-            
+
             // Unlock and return
             bitmap.UnlockBits(bitmapData);
             return bitmap;

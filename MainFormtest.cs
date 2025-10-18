@@ -6,12 +6,9 @@ using Emgu.CV.Structure;
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.IO.Ports;
-using System.Linq;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using Tesseract;
@@ -72,9 +69,9 @@ namespace Auto_parking
             else if (mathe.Substring(0, 2) == "f_")
             {
                 if (mathe.Substring(0, 3) == "f_1")
-                {                 
+                {
                     IsFire = true;
-                MessageBox.Show("Bãi đỗ xe đang có cảnh báo NGUY HIỂM !!", "THÔNG BÁO", MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
+                    MessageBox.Show("Bãi đỗ xe đang có cảnh báo NGUY HIỂM !!", "THÔNG BÁO", MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
 
                     string m_DataSend = "1   FIRE EXIT   ";
                     SendData(m_DataSend);
@@ -83,7 +80,7 @@ namespace Auto_parking
                     m_DataSend = "2 Please Go out ";
                     SendData(m_DataSend);
                     Thread.Sleep(1000);
-   
+
                 }
                 else
                 {
@@ -96,7 +93,7 @@ namespace Auto_parking
                     m_DataSend = "2               ";
                     SendData(m_DataSend);
                     Thread.Sleep(1000);
-                    
+
                 }
             }
 
@@ -152,7 +149,7 @@ namespace Auto_parking
                                 lblInputTime.Text = dt.Rows[0]["UpdateTime"].ToString();
                                 Guid ID = new Guid(dt.Rows[0]["ID"].ToString());
 
-                               
+
                                 lblMoney.Text = "10.000 Đồng";
 
                                 cls.LayXe(mathe.Substring(2, mathe.Length - 2), ID, 10);
@@ -276,7 +273,7 @@ namespace Auto_parking
         List<string> PlateTextList = new List<string>();
         List<System.Drawing.Rectangle> listRect = new List<Rectangle>();
         PictureBox[] box = new PictureBox[12];
-        
+
         public TesseractEngine full_tesseract = null;
         public TesseractEngine ch_tesseract = null;
         public TesseractEngine num_tesseract = null;
@@ -440,7 +437,7 @@ namespace Auto_parking
                     STM1_Serial.Open();
                     STM1_Serial.DataReceived += STM1_Serial_DataReceived;
 
-                }   
+                }
                 catch
                 {
 
@@ -487,7 +484,7 @@ namespace Auto_parking
                 STM2_Serial.Open();
                 STM2_Serial.DataReceived += STM2_Serial_DataReceived;
 
-                string m_DataSend = "1 TRUONG DHCN HN"; 
+                string m_DataSend = "1 TRUONG DHCN HN";
                 SendData(m_DataSend);
                 Thread.Sleep(500);
 
@@ -507,10 +504,10 @@ namespace Auto_parking
             {
                 full_tesseract = new TesseractEngine(testDataPath, m_lang, EngineMode.Default);
                 full_tesseract.SetVariable("tessedit_char_whitelist", "ABCDEFHKLMNPRSTVXY1234567890");
-                
+
                 ch_tesseract = new TesseractEngine(testDataPath, m_lang, EngineMode.Default);
                 ch_tesseract.SetVariable("tessedit_char_whitelist", "ABCDEFHKLMNPRSTUVXY");
-                
+
                 num_tesseract = new TesseractEngine(testDataPath, m_lang, EngineMode.Default);
                 num_tesseract.SetVariable("tessedit_char_whitelist", "1234567890");
             }
@@ -684,9 +681,9 @@ namespace Auto_parking
             string temp = "";
             // Convert Bitmap to Image using extension method
             Image<Gray, byte> src = image_s.ToGrayImage();
-            
+
             double ratio = 1;
-            
+
             // Count non-zero pixels for Emgu.CV 3.x
             int nonZeroCount = 0;
             using (Mat srcMat = src.Mat)
@@ -697,13 +694,13 @@ namespace Auto_parking
                 CvInvoke.Compare(srcMat, zeroMat, mask, CmpType.NotEqual);
                 nonZeroCount = CvInvoke.CountNonZero(mask);
             }
-            
+
             while (true)
             {
                 ratio = (double)nonZeroCount / (src.Width * src.Height);
                 if (ratio > 0.5) break;
                 src = src.Dilate(2);
-                
+
                 // Recalculate non-zero count
                 using (Mat srcMat = src.Mat)
                 using (Mat mask = new Mat())
@@ -725,32 +722,32 @@ namespace Auto_parking
                 ocr = ch_tesseract;
 
             int cou = 0;
-            
+
             // Sử dụng API của Tesseract 5.x với Process()
             try
             {
-                using (var pix = PixConverter.ToPix(image))
+                using (Pix pix = PixConverter.ToPix(image))
                 {
-                    using (var page = ocr.Process(pix))
+                    using (Page page = ocr.Process(pix))
                     {
                         temp = page.GetText().Trim();
                     }
                 }
-                
+
                 while (temp.Length > 3)
                 {
                     Image<Gray, byte> temp2 = image.ToGrayImage();
                     temp2 = temp2.Erode(2);
                     image = temp2.ToBitmap();
-                    
-                    using (var pix = PixConverter.ToPix(image))
+
+                    using (Pix pix = PixConverter.ToPix(image))
                     {
-                        using (var page = ocr.Process(pix))
+                        using (Page page = ocr.Process(pix))
                         {
                             temp = page.GetText().Trim();
                         }
                     }
-                    
+
                     cou++;
                     if (cou > 10)
                     {
@@ -763,7 +760,7 @@ namespace Auto_parking
             {
                 temp = "";
             }
-            
+
             return temp;
 
         }
@@ -778,10 +775,10 @@ namespace Auto_parking
             Bitmap src;
             //pictureBox2.Image = new Image<Gray, byte>(image).ToBitmap();
             Image dst = image;
-            
+
             // Use CascadeClassifier for Emgu.CV 3.x instead of HaarCascade
             Emgu.CV.CascadeClassifier cascade = new Emgu.CV.CascadeClassifier(Application.StartupPath + "\\output-hv-33-x25.xml");
-            
+
             for (float i = 0; i <= 20; i = i + 3)
             {
                 for (float s = -1; s <= 1 && s + i != 1; s += 2)
@@ -789,13 +786,13 @@ namespace Auto_parking
                     src = RotateImage(dst, i * s);
                     PlateImagesList.Clear();
                     frame = src.ToBgrImage();
-                    
+
                     using (Image<Gray, byte> grayframe = src.ToGrayImage())
                     {
                         // Use DetectMultiScale for Emgu.CV 3.x
                         Rectangle[] faces = cascade.DetectMultiScale(grayframe, 1.1, 8, new Size(0, 0));
-                        
-                        foreach (var face in faces)
+
+                        foreach (Rectangle face in faces)
                         {
                             Image<Bgr, byte> tmp = frame.Copy();
                             tmp.ROI = face;
@@ -809,7 +806,7 @@ namespace Auto_parking
                         if (isface)
                         {
                             Image<Bgr, byte> showimg = frame.Clone();
-                            plateDraw = (Image)showimg.ToBitmap();
+                            plateDraw = showimg.ToBitmap();
                             //showimg = frame.Resize(imageBox1.Width, imageBox1.Height, 0);
                             //pictureBox1.Image = showimg.ToBitmap();
                             IF.pictureBox2.Image = showimg.ToBitmap();
@@ -855,7 +852,7 @@ namespace Auto_parking
             {
                 Bitmap plateBitmap = PlateImagesList[0].ToBitmap();
                 Image<Bgr, byte> src = plateBitmap.ToBgrImage();
-                
+
                 Bitmap grayframe;
                 FindContours con = new FindContours();
                 Bitmap color;
@@ -901,13 +898,13 @@ namespace Auto_parking
                 {
                     Bitmap ch = grayframe.Clone(listRect[i], grayframe.PixelFormat);
                     int cou = 0;
-                    
+
                     string temp = "";
                     try
                     {
-                        using (var pix = PixConverter.ToPix(ch))
+                        using (Pix pix = PixConverter.ToPix(ch))
                         {
-                            using (var page = full_tesseract.Process(pix))
+                            using (Page page = full_tesseract.Process(pix))
                             {
                                 temp = page.GetText().Trim();
                             }
@@ -917,18 +914,18 @@ namespace Auto_parking
                     {
                         temp = "";
                     }
-                    
+
                     while (temp.Length > 3)
                     {
                         Image<Gray, byte> temp2 = ch.ToGrayImage();
                         temp2 = temp2.Erode(2);
                         ch = temp2.ToBitmap();
-                        
+
                         try
                         {
-                            using (var pix = PixConverter.ToPix(ch))
+                            using (Pix pix = PixConverter.ToPix(ch))
                             {
-                                using (var page = full_tesseract.Process(pix))
+                                using (Page page = full_tesseract.Process(pix))
                                 {
                                     temp = page.GetText().Trim();
                                 }
@@ -938,7 +935,7 @@ namespace Auto_parking
                         {
                             temp = "";
                         }
-                        
+
                         cou++;
                         if (cou > 10)
                         {

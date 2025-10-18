@@ -1,12 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Drawing;
-using Emgu.CV;
+﻿using Emgu.CV;
+using Emgu.CV.CvEnum;
 using Emgu.CV.Structure;
 using Emgu.CV.Util;
-using Emgu.CV.CvEnum;
+using System;
+using System.Collections.Generic;
+using System.Drawing;
 
 namespace Auto_parking
 {
@@ -48,7 +46,7 @@ namespace Auto_parking
             Image<Gray, byte> src;
             Image<Gray, byte> bi2;
             int c = 0, c_best = 0;
-            
+
             for (double value = 0; value <= 127; value += 3)
             {
                 for (int s = -1; s <= 1 && s + value != 1; s += 2)
@@ -64,16 +62,16 @@ namespace Auto_parking
                     using (VectorOfVectorOfPoint contours = new VectorOfVectorOfPoint())
                     {
                         CvInvoke.FindContours(src, contours, null, RetrType.List, ChainApproxMethod.ChainApproxSimple);
-                        
+
                         for (int i = 0; i < contours.Size; i++)
                         {
                             using (VectorOfPoint contour = contours[i])
                             {
                                 Rectangle rect = CvInvoke.BoundingRectangle(contour);
-                                
+
                                 // Draw contours
                                 CvInvoke.DrawContours(color2, contours, i, new MCvScalar(255, 255, 0), 1);
-                                
+
                                 double ratio = (double)rect.Width / rect.Height;
                                 if (rect.Width > 20 && rect.Width < 150
                                     && rect.Height > 80 && rect.Height < 180
@@ -89,7 +87,7 @@ namespace Auto_parking
                             }
                         }
                     }
-                    
+
                     double avg_h = 0;
                     double dis = 0;
                     for (int i = 0; i < c; i++)
@@ -153,7 +151,7 @@ namespace Auto_parking
             #endregion
             return count;
         }
-        
+
         private double cout_avg(Image<Gray, byte> src)
         {
             double d = 0;
@@ -166,7 +164,7 @@ namespace Auto_parking
             using (VectorOfVectorOfPoint contours = new VectorOfVectorOfPoint())
             {
                 CvInvoke.FindContours(grayImage, contours, null, RetrType.List, ChainApproxMethod.ChainApproxSimple);
-                
+
                 for (int i = 0; i < contours.Size; i++)
                 {
                     using (VectorOfPoint contour = contours[i])
@@ -192,7 +190,7 @@ namespace Auto_parking
 
             return d;
         }
-        
+
         private double cout_avg_new(Image<Gray, byte> src)
         {
             double d = 0;
@@ -207,7 +205,7 @@ namespace Auto_parking
             using (VectorOfVectorOfPoint contours = new VectorOfVectorOfPoint())
             {
                 CvInvoke.FindContours(grayImage, contours, null, RetrType.List, ChainApproxMethod.ChainApproxSimple);
-                
+
                 for (int i = 0; i < contours.Size; i++)
                 {
                     using (VectorOfPoint contour = contours[i])
@@ -237,7 +235,7 @@ namespace Auto_parking
                     for (int y = 0; y < tmp3.Rows; y++)
                         for (int x = 0; x < tmp3.Cols; x++)
                         {
-                            int value = (int)tmp3.Data[y, x, 0];
+                            int value = tmp3.Data[y, x, 0];
                             if (value <= T)
                             {
                                 m++;
@@ -253,7 +251,7 @@ namespace Auto_parking
                 } while (T - T0 > 1 || T0 - T > 1);
 
 
-                d += (double)T0 / (double)lsR.Count;
+                d += T0 / (double)lsR.Count;
             }
 
             return d;
@@ -278,14 +276,14 @@ namespace Auto_parking
                 using (VectorOfVectorOfPoint contours = new VectorOfVectorOfPoint())
                 {
                     CvInvoke.FindContours(src, contours, null, RetrType.List, ChainApproxMethod.ChainApproxSimple);
-                    
+
                     for (int i = 0; i < contours.Size; i++)
                     {
                         using (VectorOfPoint contour = contours[i])
                         {
                             Rectangle rect = CvInvoke.BoundingRectangle(contour);
                             CvInvoke.DrawContours(color2, contours, i, new MCvScalar(255, 255, 0), 1);
-                            
+
                             if (rect.Width > 20 && rect.Width < 150
                                 && rect.Height > 80 && rect.Height < 150)
                             {
@@ -298,7 +296,7 @@ namespace Auto_parking
                             }
                         }
                     }
-                    
+
                     for (int i = 0; i < c; i++)
                     {
                         for (int j = i + 1; j < c; j++)
