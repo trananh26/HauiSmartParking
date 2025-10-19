@@ -267,7 +267,7 @@ namespace Auto_parking
         List<Image<Bgr, byte>> PlateImagesList = new List<Image<Bgr, byte>>();
         Image Plate_Draw;
         List<string> PlateTextList = new List<string>();
-        List<System.Drawing.Rectangle> listRect = new List<Rectangle>();
+        List<Rectangle> listRect = new List<Rectangle>();
         PictureBox[] box = new PictureBox[12];
 
         public TesseractEngine full_tesseract = null;
