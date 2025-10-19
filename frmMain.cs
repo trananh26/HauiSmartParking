@@ -415,13 +415,10 @@ namespace Auto_parking
                 MessageBox.Show(ee.ToString());
                 return "";
             }
-
-
         }
 
         private void tm_AutoReconnect_Tick(object sender, EventArgs e)
         {
-
             if (STM1_Serial.IsOpen != true)
             {
                 try
@@ -452,7 +449,6 @@ namespace Auto_parking
 
                 }
             }
-
         }
 
         private void MainForm_Load(object sender, EventArgs e)
@@ -493,7 +489,7 @@ namespace Auto_parking
             IF = new frmImage();
 
             // Khởi tạo Tesseract với API 5.x
-            string testDataPath = Application.StartupPath + @"\testData";
+            string testDataPath = Path.Combine(Application.StartupPath, "App_Data", @"data");
             try
             {
                 full_tesseract = new TesseractEngine(testDataPath, m_lang, EngineMode.Default);
@@ -507,7 +503,10 @@ namespace Auto_parking
             }
             catch (Exception ex)
             {
-                MessageBox.Show("Lỗi khởi tạo Tesseract OCR: " + ex.Message + "\n\nVui lòng đảm bảo thư mục 'testData' và file 'eng.traineddata' tồn tại.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                MessageBox.Show("Lỗi khởi tạo Tesseract OCR: "
+                    + ex.Message
+                    + Environment.NewLine
+                    + "Vui lòng đảm bảo thư mục 'testData' và file 'eng.traineddata' tồn tại.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
             m_path = System.Environment.CurrentDirectory + "\\";
@@ -579,7 +578,6 @@ namespace Auto_parking
                 {
 
                     RFID_Analys(InputData);
-
                 }
 
             }
@@ -593,7 +591,6 @@ namespace Auto_parking
         {
             try
             {
-
                 string InputData = string.Empty;
                 if (STM1_Serial.BytesToRead > 500)
                 {
@@ -608,15 +605,11 @@ namespace Auto_parking
 
                 if (InputData != string.Empty)
                 {
-
                     RFID_Analys(InputData);
-
                 }
-
             }
             catch
             {
-
             }
         }
 
@@ -669,7 +662,6 @@ namespace Auto_parking
 
             return rotatedBmp;
         }
-
         private string Ocr(Bitmap image_s, bool isFull, bool isNum = false)
         {
             string temp = "";

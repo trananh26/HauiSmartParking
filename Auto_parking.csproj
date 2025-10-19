@@ -124,15 +124,33 @@
       <SubType>Designer</SubType>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
-    <None Include="App_Data\data\eng.cube.bigrams" />
-    <None Include="App_Data\data\eng.cube.fold" />
-    <None Include="App_Data\data\eng.cube.lm" />
-    <None Include="App_Data\data\eng.cube.nn" />
-    <None Include="App_Data\data\eng.cube.params" />
-    <None Include="App_Data\data\eng.cube.size" />
-    <None Include="App_Data\data\eng.cube.word-freq" />
-    <None Include="App_Data\data\eng.tesseract_cube.nn" />
-    <None Include="App_Data\data\eng.traineddata" />
+    <None Include="App_Data\data\eng.cube.bigrams">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="App_Data\data\eng.cube.fold">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="App_Data\data\eng.cube.lm">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="App_Data\data\eng.cube.nn">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="App_Data\data\eng.cube.params">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="App_Data\data\eng.cube.size">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="App_Data\data\eng.cube.word-freq">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="App_Data\data\eng.tesseract_cube.nn">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="App_Data\data\eng.traineddata">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Include="App_Data\ImageTest\dfbdab.xlsx" />
     <None Include="App_Data\ImageTest\Thumbs.db" />
     <None Include="Properties\Settings.settings">
@@ -147,8 +165,12 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include=".gitignore" />
-    <Content Include="App_Data\data\aa.bmp" />
-    <Content Include="App_Data\data\b.bmp" />
+    <Content Include="App_Data\data\aa.bmp">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="App_Data\data\b.bmp">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
     <Content Include="App_Data\ImageTest\11059925-xexin8.jpg" />
     <Content Include="App_Data\ImageTest\11270327_896981600368358_5654267662891161986_o.jpg" />
     <Content Include="App_Data\ImageTest\15_36_1310988590_14_vnm_2011_366495.jpg" />
