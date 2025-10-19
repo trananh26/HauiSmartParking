@@ -148,11 +148,11 @@ namespace Auto_parking
 
                                 cls.LayXe(mathe.Substring(2, mathe.Length - 2), ID, 10);
                                 lb_vaora.Text = "XE RA";
-                                //Lưu số tiền vào bảng TotalMoney
+                                // Lưu số tiền vào bảng TotalMoney
                                 cls.SaveMoney(10);
-                                //Lấy lên tổng doanh thu mới
+                                // Lấy lên tổng doanh thu mới
                                 lblTotalMoney.Text = cls.GetTotalMoney().ToString();
-                                //lblTotalMoney.Text = cls.GetTotalMoney().ToString() + ".000 Đồng";
+                                // lblTotalMoney.Text = cls.GetTotalMoney().ToString() + ".000 Đồng";
                             }
                             else
                             {
@@ -170,6 +170,7 @@ namespace Auto_parking
                 }
             }
         }
+        
         //Xử lý tín hiệu cảm  biến
         private void SensorAnalys(string SensorData)
         {
@@ -202,7 +203,7 @@ namespace Auto_parking
 
                     if (Empty == 0)
                     {
-                        MessageBox.Show("BÃI ĐỖ XE HIỆN ĐÃ ĐẦY. VUI LÒNG GIẢI PHÓNG XE", "CẢNH BÁO", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        MessageBox.Show("BÃI ĐỖ XE HIỆN ĐÃ ĐẦY. VUI LÒNG GIẢI PHÓNG XE!", "CẢNH BÁO", MessageBoxButtons.OK, MessageBoxIcon.Warning);
 
                         m_DataSend = "1FULL - No Space";
                         SendData(m_DataSend);
@@ -236,7 +237,6 @@ namespace Auto_parking
             }
             catch
             {
-
             }
         }
 
@@ -252,7 +252,7 @@ namespace Auto_parking
         }
 
         /// <summary>
-        ///Gửi tín hiệu xuống STM ngõ ra 
+        /// Gửi tín hiệu xuống STM ngõ ra 
         /// </summary>
         /// <param name="data"></param>
         private void SendData(string data)
@@ -261,7 +261,9 @@ namespace Auto_parking
             //Bdata[data.Length - 1] = (char)0x03;
             STM2_Serial.Write(Bdata, 0, Bdata.Length);
         }
+
         #region định nghĩa
+
         List<Image<Bgr, byte>> PlateImagesList = new List<Image<Bgr, byte>>();
         Image Plate_Draw;
         List<string> PlateTextList = new List<string>();
@@ -272,7 +274,6 @@ namespace Auto_parking
         public TesseractEngine ch_tesseract = null;
         public TesseractEngine num_tesseract = null;
         private string m_path = Application.StartupPath + @"\data\";
-        private List<string> lstimages = new List<string>();
         private const string m_lang = "eng";
 
         //int current = 0;
@@ -325,14 +326,23 @@ namespace Auto_parking
         {
             CaptureImageThenRecognize(2);
         }
+
+        /// <summary>
+        /// Captures an image from the specified camera,
+        /// performs recognition on the captured image,
+        /// and returns the recognized license plate number.
+        /// </summary>
+        /// <remarks>This method resets relevant UI elements before capturing and processing the image. If
+        /// the required capture devices are not available, the method returns an empty string.</remarks>
+        /// <param name="Type">Specifies which camera to use for image capture. Use 1 for the input camera and 2 for the output camera.</param>
+        /// <returns>A string containing the recognized license plate number. Returns an empty string if recognition fails or no
+        /// plate is detected.</returns>
         private string CaptureImageThenRecognize(int Type)
         {
             try
             {
-                //if (mCaptureInput != null || mCameraOutput != null)
                 if (captureDevice1 != null || captureDevice2 != null)
                 {
-
                     picInputPicture1.Image = null;
                     picOutputPicture1.Image = null;
                     picInputPicture2.Image = null;
@@ -372,7 +382,7 @@ namespace Auto_parking
                     IF.pictureBox2.Update();
                     Image temp1;
                     string temp2, temp3;
-                    Reconize(m_path + "aa.bmp", Type, out temp1, out temp2, out temp3);
+                    Recognize(m_path + "aa.bmp", Type, out temp1, out temp2, out temp3);
                     if (Type == 1)
                     {
                         picInputPicture2.Image = temp1;
@@ -427,11 +437,9 @@ namespace Auto_parking
                     STM1_Serial.BaudRate = int.Parse(XINIFILE.ReadValue("BAURATE"));
                     STM1_Serial.Open();
                     STM1_Serial.DataReceived += STM1_Serial_DataReceived;
-
                 }
                 catch
                 {
-
                 }
             }
 
@@ -446,22 +454,23 @@ namespace Auto_parking
                 }
                 catch
                 {
-
                 }
             }
         }
 
         private void MainForm_Load(object sender, EventArgs e)
         {
+            // 1. kết nối camera
             GetCameraInfor();
 
+            // 2. Khởi tạo giao diện và dữ liệu
             lblMoney.Visible = false;
             lblTotalInput.Text = cls.InputCount().ToString("00");
             lblTotalOutput.Text = cls.OutputCount().ToString("00");
-            //Lấy lên tổng doanh thu mới
-            lblTotalMoney.Text = cls.GetTotalMoney() + " Đồng";
+            lblTotalMoney.Text = cls.GetTotalMoney() + " Đồng"; // Lấy lên tổng doanh thu mới
 
-            //cboSTMPorts.DataSource = SerialPort.GetPortNames();
+            // 3. Kết nối cổng Serial, điều khiển cổng vào và cổng ra
+            // cboSTMPorts.DataSource = SerialPort.GetPortNames();
             try
             {
                 STM1_Serial.PortName = XINIFILE.ReadValue("COM_STM1");
@@ -488,7 +497,7 @@ namespace Auto_parking
 
             IF = new frmImage();
 
-            // Khởi tạo Tesseract với API 5.x
+            // 4. Khởi tạo Tesseract với API 5.x
             string testDataPath = Path.Combine(Application.StartupPath, "App_Data", @"data");
             try
             {
@@ -517,18 +526,20 @@ namespace Auto_parking
             }
         }
 
-        FilterInfoCollection filterInfo;
         VideoCaptureDevice captureDevice1;
         VideoCaptureDevice captureDevice2;
 
+        /// <summary>
+        /// Xử lý kết nối camera
+        /// </summary>
         private void GetCameraInfor()
         {
             try
             {
-                ///lấy danh sách camera
-                filterInfo = new FilterInfoCollection(FilterCategory.VideoInputDevice);
+                // lấy danh sách camera
+                var filterInfo = new FilterInfoCollection(FilterCategory.VideoInputDevice);
 
-                ///set chọn camera
+                // set chọn camera
                 captureDevice1 = new VideoCaptureDevice(filterInfo[0].MonikerString);//2
                 captureDevice1.NewFrame += CaptureDevice1_NewFrame;
                 captureDevice1.Start();
@@ -544,7 +555,6 @@ namespace Auto_parking
                 Console.WriteLine($"{ex}");
                 Application.Exit();
             }
-
         }
 
         private void CaptureDevice2_NewFrame(object sender, NewFrameEventArgs eventArgs)
@@ -561,7 +571,6 @@ namespace Auto_parking
         {
             try
             {
-
                 string InputData = string.Empty;
                 if (STM2_Serial.BytesToRead > 500)
                 {
@@ -576,14 +585,11 @@ namespace Auto_parking
                 //}
                 if (InputData != string.Empty)
                 {
-
                     RFID_Analys(InputData);
                 }
-
             }
             catch
             {
-
             }
         }
 
@@ -634,6 +640,7 @@ namespace Auto_parking
             }
 
         }
+
         public static Bitmap RotateImage(Image image, float angle)
         {
             if (image == null)
@@ -662,6 +669,14 @@ namespace Auto_parking
 
             return rotatedBmp;
         }
+
+        /// <summary>
+        /// Nhận diện ký tự sử dụng Tesseract OCR
+        /// </summary>
+        /// <param name="image_s"></param>
+        /// <param name="isFull"></param>
+        /// <param name="isNum"></param>
+        /// <returns></returns>
         private string Ocr(Bitmap image_s, bool isFull, bool isNum = false)
         {
             string temp = "";
@@ -815,15 +830,28 @@ namespace Auto_parking
 
         }
 
-        private void Reconize(string link, int Type, out Image hinhbienso, out string bienso, out string bienso_text)
+        /// <summary>
+        /// Performs license plate recognition on the specified image and outputs the detected license plate image and
+        /// text.
+        /// </summary>
+        /// <remarks>If no license plate is detected in the image, the output parameters are set to their
+        /// default values (null or empty string). The method updates certain UI elements as part of its
+        /// operation.</remarks>
+        /// <param name="link">The file path or URL of the image to process for license plate recognition. Cannot be null or empty.</param>
+        /// <param name="Type">An integer indicating the recognition context. Use 1 for entry recognition and 2 for exit recognition.
+        /// Determines which UI elements are updated with the results.</param>
+        /// <param name="hinhbienso">When this method returns, contains the image of the detected license plate if recognition is successful;
+        /// otherwise, null. This parameter is passed uninitialized.</param>
+        /// <param name="bienso">When this method returns, contains the recognized license plate string with formatting removed. This
+        /// parameter is passed uninitialized.</param>
+        /// <param name="bienso_text">When this method returns, contains the raw recognized license plate text, including line breaks. This
+        /// parameter is passed uninitialized.</param>
+        private void Recognize(string link, int Type, out Image hinhbienso, out string bienso, out string bienso_text)
         {
-            //try
-            //{
             pic_BiensoVao1.Image = null;
             pic_BiensoVao2.Image = null;
             pic_BiensoRa1.Image = null;
             pic_BiensoRa2.Image = null;
-
 
             for (int i = 0; i < box.Length; i++)
             {
