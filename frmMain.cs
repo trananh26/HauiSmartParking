@@ -518,7 +518,7 @@ namespace Auto_parking
                     + "Vui lòng đảm bảo thư mục 'testData' và file 'eng.traineddata' tồn tại.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
 
-            m_path = System.Environment.CurrentDirectory + "\\";
+            m_path = Environment.CurrentDirectory + "\\";
             //string[] ports = SerialPort.GetPortNames();
             for (int i = 0; i < box.Length; i++)
             {
