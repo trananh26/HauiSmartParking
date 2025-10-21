@@ -888,10 +888,10 @@ namespace Auto_parking
         /// parameter is passed uninitialized.</param>
         private void Recognize(string link, int Type, out Image hinhbienso, out string bienso, out string bienso_text)
         {
-            pic_BiensoVao1.Image = null;
-            pic_BiensoVao2.Image = null;
-            pic_BiensoRa1.Image = null;
-            pic_BiensoRa2.Image = null;
+            DisposeImage(pic_BiensoVao1);
+            DisposeImage(pic_BiensoVao2);
+            DisposeImage(pic_BiensoRa1);
+            DisposeImage(pic_BiensoRa2);
 
             for (int i = 0; i < box.Length; i++)
             {
