@@ -27,6 +27,27 @@ namespace Auto_parking
         private bool IsFire;
         delegate void MyDelegate();
 
+        // Singleton OpenFileDialog
+        private OpenFileDialog _openFileDialog;
+        private OpenFileDialog FileDialog
+        {
+            get
+            {
+                if (_openFileDialog == null)
+                {
+                    _openFileDialog = new OpenFileDialog
+                    {
+                        InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures),
+                        Filter = "Bitmap files (*.bmp)|*.bmp|All Image files (*.bmp;*.jpg;*.jpeg;*.png)|*.bmp;*.jpg;*.jpeg;*.png",
+                        FilterIndex = 1,
+                        RestoreDirectory = true,
+                        Title = "Select a bitmap image for license plate recognition"
+                    };
+                }
+                return _openFileDialog;
+            }
+        }
+
         #endregion
 
         #region Constructor
@@ -444,6 +465,13 @@ namespace Auto_parking
 
                 MessageBox.Show(ee.ToString());
                 return "";
+            }
+            finally
+            {
+                // Force cleanup ngay sau khi xử lý
+                GC.Collect();
+                GC.WaitForPendingFinalizers();
+                GC.Collect();
             }
         }
 
@@ -1183,25 +1211,26 @@ namespace Auto_parking
             full_tesseract?.Dispose();
             ch_tesseract?.Dispose();
             num_tesseract?.Dispose();
+
+            // Dispose OpenFileDialog singleton
+            if (_openFileDialog != null)
+            {
+                _openFileDialog.Dispose();
+                _openFileDialog = null;
+            }
         }
 
         private void btnTest_Click(object sender, EventArgs e)
         {
             try
             {
-                using (OpenFileDialog openFileDialog = new OpenFileDialog())
-                {
-                    openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
-                    openFileDialog.Filter = "Bitmap files (*.bmp)|*.bmp|All Image files (*.bmp;*.jpg;*.jpeg;*.png)|*.bmp;*.jpg;*.jpeg;*.png";
-                    openFileDialog.FilterIndex = 1;
-                    openFileDialog.RestoreDirectory = true;
-                    openFileDialog.Title = "Select a bitmap image for license plate recognition";
+                // Reset lại FileName trước khi sử dụng
+                FileDialog.FileName = string.Empty;
 
-                    if (openFileDialog.ShowDialog() == DialogResult.OK)
-                    {
-                        string selectedFilePath = openFileDialog.FileName;
-                        string recognizedPlate = CaptureImageThenRecognize(1, selectedFilePath);
-                    }
+                if (FileDialog.ShowDialog() == DialogResult.OK)
+                {
+                    string selectedFilePath = FileDialog.FileName;
+                    string recognizedPlate = CaptureImageThenRecognize(1, selectedFilePath);
                 }
             }
             catch (Exception ex)
