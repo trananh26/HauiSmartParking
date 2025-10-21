@@ -18,7 +18,8 @@ namespace Auto_parking
 {
     public partial class MainForm : Form
     {
-        // object xein;
+        #region Private Fields 
+
         delegate void SetTextCallback(string text);
         private clsCommon cls = new clsCommon();
         private frmImage IF;
@@ -26,11 +27,19 @@ namespace Auto_parking
         private bool IsFire;
         delegate void MyDelegate();
 
+        #endregion
+
+        #region Constructor
+
         public MainForm()
         {
             InitializeComponent();
             CheckForIllegalCrossThreadCalls = false;
         }
+
+        #endregion
+
+        #region Methods
 
         private void RFID_Analys(string mathe)
         {
@@ -170,7 +179,7 @@ namespace Auto_parking
                 }
             }
         }
-        
+
         //Xử lý tín hiệu cảm  biến
         private void SensorAnalys(string SensorData)
         {
@@ -335,9 +344,10 @@ namespace Auto_parking
         /// <remarks>This method resets relevant UI elements before capturing and processing the image. If
         /// the required capture devices are not available, the method returns an empty string.</remarks>
         /// <param name="Type">Specifies which camera to use for image capture. Use 1 for the input camera and 2 for the output camera.</param>
+        /// <param name="imageTestPath"">Optional file path to an image for testing purposes. If provided, the method will use this image instead of capturing from a camera.</param>
         /// <returns>A string containing the recognized license plate number. Returns an empty string if recognition fails or no
         /// plate is detected.</returns>
-        private string CaptureImageThenRecognize(int Type)
+        private string CaptureImageThenRecognize(int Type, string imageTestPath = null)
         {
             try
             {
@@ -356,7 +366,10 @@ namespace Auto_parking
                     lblNoti.Visible = false;
 
                     IF.pictureBox2.Image = null;
-                    if (Type == 1)
+                    if (!string.IsNullOrEmpty(imageTestPath)) {
+                        File.Copy(imageTestPath, m_path + "aa.bmp", true);
+                    }
+                    else if (Type == 1)
                     {
                         picInputCam.Image.Save("aa.bmp");
                     }
@@ -380,41 +393,39 @@ namespace Auto_parking
                     }
                     IF.pictureBox2.Image = temp;
                     IF.pictureBox2.Update();
-                    Image temp1;
-                    string temp2, temp3;
-                    Recognize(m_path + "aa.bmp", Type, out temp1, out temp2, out temp3);
+                    Recognize(m_path + "aa.bmp", Type, out Image hienBienSo, out string bienSo, out string bienSoText);
                     if (Type == 1)
                     {
-                        picInputPicture2.Image = temp1;
+                        picInputPicture2.Image = hienBienSo;
 
-                        if (temp3 == "")
+                        if (bienSoText == "")
                         {
                             txt_BiensoVao.Text = "";
                         }
                         else
                         {
-                            txt_BiensoVao.Text = temp3;
-                            temp3 = temp3.Replace("\n", "");
-                            temp3 = temp3.Replace("\r", "");
+                            txt_BiensoVao.Text = bienSoText;
+                            bienSoText = bienSoText.Replace("\n", "");
+                            bienSoText = bienSoText.Replace("\r", "");
                             // MessageBox.Show("BIỂN SỐ XE LÀ " + temp3, "THÔNG BÁO", MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
                         }
                     }
                     else if (Type == 2)
                     {
-                        picOutputPicture2.Image = temp1;
-                        if (temp3 == "")
+                        picOutputPicture2.Image = hienBienSo;
+                        if (bienSoText == "")
                         {
                             txt_BiensoRa.Text = "";
                         }
                         else
                         {
-                            txt_BiensoRa.Text = temp3;
-                            temp3 = temp3.Replace("\n", "");
-                            temp3 = temp3.Replace("\r", "");
+                            txt_BiensoRa.Text = bienSoText;
+                            bienSoText = bienSoText.Replace("\n", "");
+                            bienSoText = bienSoText.Replace("\r", "");
                             // MessageBox.Show("BIỂN SỐ XE LÀ " + temp3, "THÔNG BÁO", MessageBoxButtons.OKCancel, MessageBoxIcon.Information);
                         }
                     }
-                    return temp3;
+                    return bienSoText;
                 }
                 else
                     return "";
@@ -625,14 +636,20 @@ namespace Auto_parking
             {
                 PlateImagesList.Clear();
                 PlateTextList.Clear();
-                FileStream fs = new FileStream(urlImage, FileMode.Open, FileAccess.Read);
-                Image img = Image.FromStream(fs);
-                Bitmap image = new Bitmap(img);
-                //pictureBox2.Image = image;
-                IF.pictureBox2.Image = image;
-                fs.Close();
+                using (var fs = new FileStream(urlImage, FileMode.Open, FileAccess.Read))
+                {
+                    using (var img = Image.FromStream(fs))
+                    {
+                        using (var image = new Bitmap(img))
+                        {
+                            //pictureBox2.Image = image;
+                            IF.pictureBox2.Image = image;
+                            fs.Close();
 
-                FindLicensePlate4(image, out Plate_Draw);
+                            FindLicensePlate4(image, out Plate_Draw);
+                        }
+                    }
+                }
             }
             catch
             {
@@ -766,14 +783,21 @@ namespace Auto_parking
 
         }
 
-
+        /// <summary>
+        /// Attempts to detect and highlight a license plate within the specified image using a trained cascade classifier.
+        /// </summary>
+        /// <remarks>This method uses a cascade classifier to scan the image for license plate-like
+        /// regions, applying multiple rotations to improve detection accuracy. The output image will display the
+        /// detected region with a visual highlight. If no license plate is detected, the output parameter will be null.
+        /// The method does not modify the input image.</remarks>
+        /// <param name="image">The source image in which to search for a license plate. Must be a valid, non-null bitmap.</param>
+        /// <param name="plateDraw">When the method returns, contains a bitmap with the detected license plate region highlighted, or null if no
+        /// plate is found.</param>
         public void FindLicensePlate4(Bitmap image, out Image plateDraw)
         {
-
             plateDraw = null;
             Image<Bgr, byte> frame;
             bool isface = false;
-            Bitmap src;
             //pictureBox2.Image = new Image<Gray, byte>(image).ToBitmap();
             Image dst = image;
 
@@ -784,7 +808,7 @@ namespace Auto_parking
             {
                 for (float s = -1; s <= 1 && s + i != 1; s += 2)
                 {
-                    src = RotateImage(dst, i * s);
+                    var src = RotateImage(dst, i * s);
                     PlateImagesList.Clear();
                     frame = src.ToBgrImage();
 
@@ -1071,12 +1095,6 @@ namespace Auto_parking
                 bienso_text = zz;
 
             }
-            //}
-            //catch (Exception)
-            //{
-
-
-            //}
         }
 
         // Add missing event handlers
@@ -1122,21 +1140,34 @@ namespace Auto_parking
             }
         }
 
+        /// <summary>
+        /// Handles the FormClosed event for the main form, performing cleanup of resources when the form is closed.
+        /// </summary>
+        /// <remarks>This method disposes of resources associated with OCR processing to ensure proper
+        /// release of unmanaged resources when the main form is closed.</remarks>
+        /// <param name="sender">The source of the event, typically the main form instance.</param>
+        /// <param name="e">An object containing data related to the form closure event.</param>
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            // Cleanup after form is closed
-            if (full_tesseract != null)
+            full_tesseract?.Dispose();
+            ch_tesseract?.Dispose();
+            num_tesseract?.Dispose();
+        }
+
+        private void btnTest_Click(object sender, EventArgs e)
+        {
+            try
             {
-                full_tesseract.Dispose();
+
             }
-            if (ch_tesseract != null)
+            catch (Exception ex)
             {
-                ch_tesseract.Dispose();
-            }
-            if (num_tesseract != null)
-            {
-                num_tesseract.Dispose();
+                MessageBox.Show($"{ex}", "ERROR", MessageBoxButtons.OK);
             }
         }
+
+        #endregion
+
     }
+
 }
