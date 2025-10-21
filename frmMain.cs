@@ -387,19 +387,23 @@ namespace Auto_parking
                     fs.Close();
                     if (Type == 1)
                     {
+                        DisposeImage(picInputPicture1);
                         picInputPicture1.Image = temp;
                         picInputPicture1.Update();
                     }
                     else if (Type == 2)
                     {
+                        DisposeImage(picOutputPicture1);
                         picOutputPicture1.Image = temp;
                         picOutputPicture1.Update();
                     }
+                    DisposeImage(IF.pictureBox2);
                     IF.pictureBox2.Image = temp;
                     IF.pictureBox2.Update();
                     Recognize(m_path + "aa.bmp", Type, out Image hienBienSo, out string bienSo, out string bienSoText);
                     if (Type == 1)
                     {
+                        DisposeImage(picInputPicture2);
                         picInputPicture2.Image = hienBienSo;
 
                         if (bienSoText == "")
@@ -416,6 +420,7 @@ namespace Auto_parking
                     }
                     else if (Type == 2)
                     {
+                        DisposeImage(picOutputPicture2);
                         picOutputPicture2.Image = hienBienSo;
                         if (bienSoText == "")
                         {
@@ -659,6 +664,7 @@ namespace Auto_parking
                         using (var image = new Bitmap(img))
                         {
                             //pictureBox2.Image = image;
+                            DisposeImage(IF.pictureBox2);
                             IF.pictureBox2.Image = image;
                             fs.Close();
 
@@ -747,19 +753,33 @@ namespace Auto_parking
             }
             Bitmap image = src.ToBitmap();
 
-                TesseractEngine ocr;
-                if (isFull)
-                    ocr = full_tesseract;
-                else if (isNum)
-                    ocr = num_tesseract;
-                else
-                    ocr = ch_tesseract;
+            TesseractEngine ocr;
+            if (isFull)
+                ocr = full_tesseract;
+            else if (isNum)
+                ocr = num_tesseract;
+            else
+                ocr = ch_tesseract;
 
-                int cou = 0;
+            int cou = 0;
 
-                // Sử dụng API của Tesseract 5.x với Process()
-                try
+            // Sử dụng API của Tesseract 5.x với Process()
+            try
+            {
+                using (Pix pix = PixConverter.ToPix(image))
                 {
+                    using (Page page = ocr.Process(pix))
+                    {
+                        temp = page.GetText().Trim();
+                    }
+                }
+
+                while (temp.Length > 3)
+                {
+                    Image<Gray, byte> temp2 = image.ToGrayImage();
+                    temp2 = temp2.Erode(2);
+                    image = temp2.ToBitmap();
+
                     using (Pix pix = PixConverter.ToPix(image))
                     {
                         using (Page page = ocr.Process(pix))
@@ -768,32 +788,18 @@ namespace Auto_parking
                         }
                     }
 
-                    while (temp.Length > 3)
+                    cou++;
+                    if (cou > 10)
                     {
-                        Image<Gray, byte> temp2 = image.ToGrayImage();
-                        temp2 = temp2.Erode(2);
-                    image = temp2.ToBitmap();
-
-                    using (Pix pix = PixConverter.ToPix(image))
-                            {
-                                using (Page page = ocr.Process(pix))
-                                {
-                                    temp = page.GetText().Trim();
-                                }
-                            }
-
-                        cou++;
-                        if (cou > 10)
-                        {
-                            temp = "";
-                            break;
-                        }
+                        temp = "";
+                        break;
                     }
                 }
-                catch (Exception)
-                {
-                    temp = "";
-                }
+            }
+            catch (Exception)
+            {
+                temp = "";
+            }
 
             return temp;
 
@@ -850,6 +856,7 @@ namespace Auto_parking
                             plateDraw = showimg.ToBitmap();
                             //showimg = frame.Resize(imageBox1.Width, imageBox1.Height, 0);
                             //pictureBox1.Image = showimg.ToBitmap();
+                            DisposeImage(IF.pictureBox2);
                             IF.pictureBox2.Image = showimg.ToBitmap();
                             if (PlateImagesList.Count > 1)
                             {
@@ -914,6 +921,10 @@ namespace Auto_parking
                 //int z = con.count;
                 if (Type == 1)
                 {
+                    DisposeImage(pic_BiensoVao2);
+                    DisposeImage(IF.pictureBox1);
+                    DisposeImage(IF.pictureBox3);
+                    DisposeImage(pic_BiensoVao1);
                     pic_BiensoVao2.Image = color;
                     IF.pictureBox1.Image = color;
                     hinhbienso = Plate_Draw;
@@ -922,6 +933,10 @@ namespace Auto_parking
                 }
                 else if (Type == 2)
                 {
+                    DisposeImage(pic_BiensoRa2);
+                    DisposeImage(IF.pictureBox1);
+                    DisposeImage(IF.pictureBox3);
+                    DisposeImage(pic_BiensoRa1);
                     pic_BiensoRa2.Image = color;
                     IF.pictureBox1.Image = color;
                     hinhbienso = Plate_Draw;
