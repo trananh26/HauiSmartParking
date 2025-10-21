@@ -353,20 +353,24 @@ namespace Auto_parking
             {
                 if (captureDevice1 != null || captureDevice2 != null)
                 {
-                    picInputPicture1.Image = null;
-                    picOutputPicture1.Image = null;
-                    picInputPicture2.Image = null;
-                    picOutputPicture2.Image = null;
-                    pic_BiensoRa1.Image = null;
-                    pic_BiensoRa2.Image = null;
-                    pic_BiensoVao1.Image = null;
-                    pic_BiensoVao2.Image = null;
+                    // ✅ Dispose images cũ trước khi gán mới
+                    DisposeImage(picInputPicture1);
+                    DisposeImage(picOutputPicture1);
+                    DisposeImage(picInputPicture2);
+                    DisposeImage(picOutputPicture2);
+                    DisposeImage(pic_BiensoRa1);
+                    DisposeImage(pic_BiensoRa2);
+                    DisposeImage(pic_BiensoVao1);
+                    DisposeImage(pic_BiensoVao2);
+                    DisposeImage(IF.pictureBox2);
+
                     txt_BiensoVao.Text = "";
                     txt_BiensoRa.Text = "";
                     lblNoti.Visible = false;
 
                     IF.pictureBox2.Image = null;
-                    if (!string.IsNullOrEmpty(imageTestPath)) {
+                    if (!string.IsNullOrEmpty(imageTestPath))
+                    {
                         File.Copy(imageTestPath, m_path + "aa.bmp", true);
                     }
                     else if (Type == 1)
@@ -537,6 +541,14 @@ namespace Auto_parking
             }
         }
 
+        // Helper method
+        private void DisposeImage(PictureBox pictureBox)
+        {
+            var oldImage = pictureBox.Image;
+            pictureBox.Image = null;
+            oldImage?.Dispose();
+        }
+
         VideoCaptureDevice captureDevice1;
         VideoCaptureDevice captureDevice2;
 
@@ -570,12 +582,16 @@ namespace Auto_parking
 
         private void CaptureDevice2_NewFrame(object sender, NewFrameEventArgs eventArgs)
         {
+            var oldImage = picInputCam.Image;
             picInputCam.Image = (Bitmap)eventArgs.Frame.Clone();
+            oldImage?.Dispose();
         }
 
         private void CaptureDevice1_NewFrame(object sender, NewFrameEventArgs eventArgs)
         {
+            var oldImage = picOutputCam.Image;
             picOutputCam.Image = (Bitmap)eventArgs.Frame.Clone();
+            oldImage?.Dispose();
         }
 
         private void STM2_Serial_DataReceived(object sender, SerialDataReceivedEventArgs e)
@@ -731,33 +747,19 @@ namespace Auto_parking
             }
             Bitmap image = src.ToBitmap();
 
-            TesseractEngine ocr;
-            if (isFull)
-                ocr = full_tesseract;
-            else if (isNum)
-                ocr = num_tesseract;
-            else
-                ocr = ch_tesseract;
+                TesseractEngine ocr;
+                if (isFull)
+                    ocr = full_tesseract;
+                else if (isNum)
+                    ocr = num_tesseract;
+                else
+                    ocr = ch_tesseract;
 
-            int cou = 0;
+                int cou = 0;
 
-            // Sử dụng API của Tesseract 5.x với Process()
-            try
-            {
-                using (Pix pix = PixConverter.ToPix(image))
+                // Sử dụng API của Tesseract 5.x với Process()
+                try
                 {
-                    using (Page page = ocr.Process(pix))
-                    {
-                        temp = page.GetText().Trim();
-                    }
-                }
-
-                while (temp.Length > 3)
-                {
-                    Image<Gray, byte> temp2 = image.ToGrayImage();
-                    temp2 = temp2.Erode(2);
-                    image = temp2.ToBitmap();
-
                     using (Pix pix = PixConverter.ToPix(image))
                     {
                         using (Page page = ocr.Process(pix))
@@ -766,18 +768,32 @@ namespace Auto_parking
                         }
                     }
 
-                    cou++;
-                    if (cou > 10)
+                    while (temp.Length > 3)
                     {
-                        temp = "";
-                        break;
+                        Image<Gray, byte> temp2 = image.ToGrayImage();
+                        temp2 = temp2.Erode(2);
+                    image = temp2.ToBitmap();
+
+                    using (Pix pix = PixConverter.ToPix(image))
+                            {
+                                using (Page page = ocr.Process(pix))
+                                {
+                                    temp = page.GetText().Trim();
+                                }
+                            }
+
+                        cou++;
+                        if (cou > 10)
+                        {
+                            temp = "";
+                            break;
+                        }
                     }
                 }
-            }
-            catch (Exception)
-            {
-                temp = "";
-            }
+                catch (Exception)
+                {
+                    temp = "";
+                }
 
             return temp;
 
@@ -802,7 +818,7 @@ namespace Auto_parking
             Image dst = image;
 
             // Use CascadeClassifier for Emgu.CV 3.x instead of HaarCascade
-            Emgu.CV.CascadeClassifier cascade = new Emgu.CV.CascadeClassifier(Application.StartupPath + "\\output-hv-33-x25.xml");
+            Emgu.CV.CascadeClassifier cascade = new Emgu.CV.CascadeClassifier(Path.Combine(Application.StartupPath, "App_Data", "data", "output-hv-33-x25.xml"));
 
             for (float i = 0; i <= 20; i = i + 3)
             {
@@ -1158,11 +1174,24 @@ namespace Auto_parking
         {
             try
             {
+                using (OpenFileDialog openFileDialog = new OpenFileDialog())
+                {
+                    openFileDialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+                    openFileDialog.Filter = "Bitmap files (*.bmp)|*.bmp|All Image files (*.bmp;*.jpg;*.jpeg;*.png)|*.bmp;*.jpg;*.jpeg;*.png";
+                    openFileDialog.FilterIndex = 1;
+                    openFileDialog.RestoreDirectory = true;
+                    openFileDialog.Title = "Select a bitmap image for license plate recognition";
 
+                    if (openFileDialog.ShowDialog() == DialogResult.OK)
+                    {
+                        string selectedFilePath = openFileDialog.FileName;
+                        string recognizedPlate = CaptureImageThenRecognize(1, selectedFilePath);
+                    }
+                }
             }
             catch (Exception ex)
             {
-                MessageBox.Show($"{ex}", "ERROR", MessageBoxButtons.OK);
+                MessageBox.Show($"{ex}", "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
