@@ -40,7 +40,6 @@ namespace Auto_parking
                         InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures),
                         Filter = "Bitmap files (*.bmp)|*.bmp|All Image files (*.bmp;*.jpg;*.jpeg;*.png)|*.bmp;*.jpg;*.jpeg;*.png",
                         FilterIndex = 1,
-                        RestoreDirectory = true,
                         Title = "Select a bitmap image for license plate recognition"
                     };
                 }
