@@ -295,7 +295,6 @@ namespace Auto_parking
 
         List<Image<Bgr, byte>> PlateImagesList = new List<Image<Bgr, byte>>();
         Image Plate_Draw;
-        List<string> PlateTextList = new List<string>();
         List<Rectangle> listRect = new List<Rectangle>();
         PictureBox[] box = new PictureBox[12];
 
@@ -683,7 +682,6 @@ namespace Auto_parking
             try
             {
                 PlateImagesList.Clear();
-                PlateTextList.Clear();
                 using (var fs = new FileStream(urlImage, FileMode.Open, FileAccess.Read))
                 {
                     using (var img = Image.FromStream(fs))
@@ -704,7 +702,6 @@ namespace Auto_parking
             {
                 MessageBox.Show("Không tìm được biển số. Vui lòng kiểm tra lại.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
-
         }
 
         public static Bitmap RotateImage(Image image, float angle)
