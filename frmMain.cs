@@ -733,6 +733,7 @@ namespace Auto_parking
 
         /// <summary>
         /// Nhận diện ký tự sử dụng Tesseract OCR
+        /// Optical Character Recognition
         /// </summary>
         /// <param name="image_s"></param>
         /// <param name="isFull"></param>
@@ -971,11 +972,12 @@ namespace Auto_parking
             hinhbienso = null;
             bienso = "";
             bienso_text = "";
-            var plateDraw = ProcessImage(link);
-            var plateBitmap = plateDraw.Resize(400, 400, Inter.Linear).ToBitmap();
-            var src = plateBitmap.ToBgrImage();
+            var plateDraw = ProcessImage(link)?.Resize(400, 400, Inter.Linear);
+
+            if (plateDraw == null) return;
+
             var con = new FindContours();
-            int c = con.IdentifyContours(src.ToBitmap(), 50, false, out Bitmap grayframe, out Bitmap color, out listRect);
+            int c = con.IdentifyContours(plateDraw.ToBitmap(), 50, false, out Bitmap grayframe, out Bitmap color, out listRect);
 
             if (Type == 1)
             {
