@@ -676,9 +676,9 @@ namespace Auto_parking
             }
         }
 
-        public Image ProcessImage(string urlImage)
+        public Image<Bgr, byte> ProcessImage(string urlImage)
         {
-            Image plateDraw = null;
+            Image<Bgr, byte> plateDraw = null;
             try
             {
                 PlateImagesList.Clear();
@@ -838,10 +838,10 @@ namespace Auto_parking
         /// The method does not modify the input image.</remarks>
         /// <param name="image">The source image in which to search for a license plate. Must be a valid, non-null bitmap.</param>
         /// plate is found.</param>
-        public Image FindLicensePlate4(Bitmap image)
+        public Image<Bgr, byte> FindLicensePlate4(Bitmap image)
         {
             // 1. Chuẩn bị biến để xử lý ảnh với Emgu CV
-            Image plateDraw = null;
+            Image<Bgr, byte> plateDraw = null;
             Image dst = image;
 
             // 2. Sử dụng file XML đã được huấn luyện để nhận diện biển số xe
@@ -872,17 +872,14 @@ namespace Auto_parking
                                 var bestFace = SelectBestPlateRegion(faces);
 
                                 // Chỉ xử lý vùng tốt nhất
-                                var tmp = frame.Copy();
-                                tmp.ROI = bestFace;
+                                plateDraw = frame.Copy();
+                                plateDraw.ROI = bestFace;
                                 frame.Draw(bestFace, new Bgr(Color.Blue), 2);
 
-                                PlateImagesList.Add(tmp);
-
-                                var showimg = frame.Clone();
-                                plateDraw = showimg.ToBitmap();
+                                PlateImagesList.Add(plateDraw);
 
                                 DisposeImage(IF.pictureBox2);
-                                IF.pictureBox2.Image = showimg.ToBitmap();
+                                IF.pictureBox2.Image = plateDraw.ToBitmap();
                                 PlateImagesList[0] = PlateImagesList[0].Resize(400, 400, Inter.Linear);
                                 return plateDraw;
                             }
@@ -1000,7 +997,7 @@ namespace Auto_parking
                     DisposeImage(pic_BiensoVao1);
                     pic_BiensoVao2.Image = color;
                     IF.pictureBox1.Image = color;
-                    hinhbienso = plateDraw;
+                    hinhbienso = plateDraw.ToBitmap();
                     pic_BiensoVao1.Image = grayframe;
                     IF.pictureBox3.Image = grayframe;
                 }
@@ -1012,7 +1009,7 @@ namespace Auto_parking
                     DisposeImage(pic_BiensoRa1);
                     pic_BiensoRa2.Image = color;
                     IF.pictureBox1.Image = color;
-                    hinhbienso = plateDraw;
+                    hinhbienso = plateDraw.ToBitmap();
                     pic_BiensoRa1.Image = grayframe;
                     IF.pictureBox3.Image = grayframe;
                 }
