@@ -292,7 +292,6 @@ namespace Auto_parking
 
         #region định nghĩa
 
-        List<Image<Bgr, byte>> PlateImagesList = new List<Image<Bgr, byte>>();
         List<Rectangle> listRect = new List<Rectangle>();
         PictureBox[] box = new PictureBox[12];
 
@@ -978,60 +977,78 @@ namespace Auto_parking
             bienso = "";
             bienso_text = "";
             var plateDraw = ProcessImage(link);
-            if (PlateImagesList.Count != 0)
+            var plateBitmap = plateDraw.Resize(400, 400, Inter.Linear).ToBitmap();
+            var src = plateBitmap.ToBgrImage();
+            var con = new FindContours();
+            int c = con.IdentifyContours(src.ToBitmap(), 50, false, out Bitmap grayframe, out Bitmap color, out listRect);
+
+            if (Type == 1)
             {
-                Bitmap plateBitmap = PlateImagesList[0].ToBitmap();
-                Image<Bgr, byte> src = plateBitmap.ToBgrImage();
+                DisposeImage(pic_BiensoVao2);
+                DisposeImage(IF.pictureBox1);
+                DisposeImage(IF.pictureBox3);
+                DisposeImage(pic_BiensoVao1);
+                pic_BiensoVao2.Image = color;
+                IF.pictureBox1.Image = color;
+                hinhbienso = plateDraw.ToBitmap();
+                pic_BiensoVao1.Image = grayframe;
+                IF.pictureBox3.Image = grayframe;
+            }
+            else if (Type == 2)
+            {
+                DisposeImage(pic_BiensoRa2);
+                DisposeImage(IF.pictureBox1);
+                DisposeImage(IF.pictureBox3);
+                DisposeImage(pic_BiensoRa1);
+                pic_BiensoRa2.Image = color;
+                IF.pictureBox1.Image = color;
+                hinhbienso = plateDraw.ToBitmap();
+                pic_BiensoRa1.Image = grayframe;
+                IF.pictureBox3.Image = grayframe;
+            }
 
-                FindContours con = new FindContours();
-                int c = con.IdentifyContours(src.ToBitmap(), 50, false, out Bitmap grayframe, out Bitmap color, out listRect);
-                //int z = con.count;
-                if (Type == 1)
+            //textBox2.Text = c.ToString();
+            Image<Gray, byte> dst = grayframe.ToGrayImage();
+            grayframe = dst.ToBitmap();
+            //pictureBox2.Image = grayframe.Clone(listRect[2], grayframe.PixelFormat);
+            string zz = "";
+
+            // lọc và sắp xếp số
+            List<Rectangle> up = new List<Rectangle>();
+            List<Rectangle> dow = new List<Rectangle>();
+            int up_y = 0, dow_y = 0;
+            bool flag_up = false;
+
+            if (listRect == null) return;
+
+            // Sử dụng API của Tesseract 5.x
+            for (int i = 0; i < listRect.Count; i++)
+            {
+                Bitmap ch = grayframe.Clone(listRect[i], grayframe.PixelFormat);
+                int cou = 0;
+
+                string temp = "";
+                try
                 {
-                    DisposeImage(pic_BiensoVao2);
-                    DisposeImage(IF.pictureBox1);
-                    DisposeImage(IF.pictureBox3);
-                    DisposeImage(pic_BiensoVao1);
-                    pic_BiensoVao2.Image = color;
-                    IF.pictureBox1.Image = color;
-                    hinhbienso = plateDraw.ToBitmap();
-                    pic_BiensoVao1.Image = grayframe;
-                    IF.pictureBox3.Image = grayframe;
+                    using (Pix pix = PixConverter.ToPix(ch))
+                    {
+                        using (Page page = full_tesseract.Process(pix))
+                        {
+                            temp = page.GetText().Trim();
+                        }
+                    }
                 }
-                else if (Type == 2)
+                catch
                 {
-                    DisposeImage(pic_BiensoRa2);
-                    DisposeImage(IF.pictureBox1);
-                    DisposeImage(IF.pictureBox3);
-                    DisposeImage(pic_BiensoRa1);
-                    pic_BiensoRa2.Image = color;
-                    IF.pictureBox1.Image = color;
-                    hinhbienso = plateDraw.ToBitmap();
-                    pic_BiensoRa1.Image = grayframe;
-                    IF.pictureBox3.Image = grayframe;
+                    temp = "";
                 }
 
-                //textBox2.Text = c.ToString();
-                Image<Gray, byte> dst = grayframe.ToGrayImage();
-                grayframe = dst.ToBitmap();
-                //pictureBox2.Image = grayframe.Clone(listRect[2], grayframe.PixelFormat);
-                string zz = "";
-
-                // lọc và sắp xếp số
-                List<Rectangle> up = new List<Rectangle>();
-                List<Rectangle> dow = new List<Rectangle>();
-                int up_y = 0, dow_y = 0;
-                bool flag_up = false;
-
-                if (listRect == null) return;
-
-                // Sử dụng API của Tesseract 5.x
-                for (int i = 0; i < listRect.Count; i++)
+                while (temp.Length > 3)
                 {
-                    Bitmap ch = grayframe.Clone(listRect[i], grayframe.PixelFormat);
-                    int cou = 0;
+                    Image<Gray, byte> temp2 = ch.ToGrayImage();
+                    temp2 = temp2.Erode(2);
+                    ch = temp2.ToBitmap();
 
-                    string temp = "";
                     try
                     {
                         using (Pix pix = PixConverter.ToPix(ch))
@@ -1047,145 +1064,122 @@ namespace Auto_parking
                         temp = "";
                     }
 
-                    while (temp.Length > 3)
+                    cou++;
+                    if (cou > 10)
                     {
-                        Image<Gray, byte> temp2 = ch.ToGrayImage();
-                        temp2 = temp2.Erode(2);
-                        ch = temp2.ToBitmap();
-
-                        try
-                        {
-                            using (Pix pix = PixConverter.ToPix(ch))
-                            {
-                                using (Page page = full_tesseract.Process(pix))
-                                {
-                                    temp = page.GetText().Trim();
-                                }
-                            }
-                        }
-                        catch
-                        {
-                            temp = "";
-                        }
-
-                        cou++;
-                        if (cou > 10)
-                        {
-                            listRect.RemoveAt(i);
-                            i--;
-                            break;
-                        }
+                        listRect.RemoveAt(i);
+                        i--;
+                        break;
                     }
                 }
-
-                for (int i = 0; i < listRect.Count; i++)
-                {
-                    for (int j = i; j < listRect.Count; j++)
-                    {
-                        if (listRect[i].Y > listRect[j].Y + 100)
-                        {
-                            flag_up = true;
-                            up_y = listRect[j].Y;
-                            dow_y = listRect[i].Y;
-                            break;
-                        }
-                        else if (listRect[j].Y > listRect[i].Y + 100)
-                        {
-                            flag_up = true;
-                            up_y = listRect[i].Y;
-                            dow_y = listRect[j].Y;
-                            break;
-                        }
-                        if (flag_up == true) break;
-                    }
-                }
-
-                for (int i = 0; i < listRect.Count; i++)
-                {
-                    if (listRect[i].Y < up_y + 50 && listRect[i].Y > up_y - 50)
-                    {
-                        up.Add(listRect[i]);
-                    }
-                    else if (listRect[i].Y < dow_y + 50 && listRect[i].Y > dow_y - 50)
-                    {
-                        dow.Add(listRect[i]);
-                    }
-                }
-
-                if (flag_up == false) dow = listRect;
-
-                for (int i = 0; i < up.Count; i++)
-                {
-                    for (int j = i; j < up.Count; j++)
-                    {
-                        if (up[i].X > up[j].X)
-                        {
-                            Rectangle w = up[i];
-                            up[i] = up[j];
-                            up[j] = w;
-                        }
-                    }
-                }
-                for (int i = 0; i < dow.Count; i++)
-                {
-                    for (int j = i; j < dow.Count; j++)
-                    {
-                        if (dow[i].X > dow[j].X)
-                        {
-                            Rectangle w = dow[i];
-                            dow[i] = dow[j];
-                            dow[j] = w;
-                        }
-                    }
-                }
-
-                int x = 12;
-                int c_x = 0;
-
-                for (int i = 0; i < up.Count; i++)
-                {
-                    Bitmap ch = grayframe.Clone(up[i], grayframe.PixelFormat);
-                    string temp;
-                    if (i < 2)
-                    {
-                        temp = Ocr(ch, false, true); // nhan dien so
-                    }
-                    else
-                    {
-                        temp = Ocr(ch, false, false);// nhan dien chu
-                    }
-
-                    zz += temp;
-                    box[i].Location = new Point(x + i * 50, 290);
-                    box[i].Size = new Size(50, 100);
-                    box[i].SizeMode = PictureBoxSizeMode.StretchImage;
-                    box[i].Image = ch;
-                    box[i].Update();
-                    //this.Controls.Add(box[i]);
-                    IF.Controls.Add(box[i]);
-                    c_x++;
-                }
-                zz += "\r\n";
-                for (int i = 0; i < dow.Count; i++)
-                {
-                    Bitmap ch = grayframe.Clone(dow[i], grayframe.PixelFormat);
-                    //ch = con.Erodetion(ch);
-                    string temp = Ocr(ch, false, true); // nhan dien so
-                    zz += temp;
-                    box[i + c_x].Location = new Point(x + i * 50, 390);
-                    box[i + c_x].Size = new Size(50, 100);
-                    box[i + c_x].SizeMode = PictureBoxSizeMode.StretchImage;
-                    box[i + c_x].Image = ch;
-                    box[i + c_x].Update();
-                    //this.Controls.Add(box[i + c_x]);
-                    IF.Controls.Add(box[i + c_x]);
-                }
-                bienso = zz.Replace("\n", "");
-                bienso = bienso.Replace("\r", "");
-                IF.textBox6.Text = zz;
-                bienso_text = zz;
-
             }
+
+            for (int i = 0; i < listRect.Count; i++)
+            {
+                for (int j = i; j < listRect.Count; j++)
+                {
+                    if (listRect[i].Y > listRect[j].Y + 100)
+                    {
+                        flag_up = true;
+                        up_y = listRect[j].Y;
+                        dow_y = listRect[i].Y;
+                        break;
+                    }
+                    else if (listRect[j].Y > listRect[i].Y + 100)
+                    {
+                        flag_up = true;
+                        up_y = listRect[i].Y;
+                        dow_y = listRect[j].Y;
+                        break;
+                    }
+                    if (flag_up == true) break;
+                }
+            }
+
+            for (int i = 0; i < listRect.Count; i++)
+            {
+                if (listRect[i].Y < up_y + 50 && listRect[i].Y > up_y - 50)
+                {
+                    up.Add(listRect[i]);
+                }
+                else if (listRect[i].Y < dow_y + 50 && listRect[i].Y > dow_y - 50)
+                {
+                    dow.Add(listRect[i]);
+                }
+            }
+
+            if (flag_up == false) dow = listRect;
+
+            for (int i = 0; i < up.Count; i++)
+            {
+                for (int j = i; j < up.Count; j++)
+                {
+                    if (up[i].X > up[j].X)
+                    {
+                        Rectangle w = up[i];
+                        up[i] = up[j];
+                        up[j] = w;
+                    }
+                }
+            }
+            for (int i = 0; i < dow.Count; i++)
+            {
+                for (int j = i; j < dow.Count; j++)
+                {
+                    if (dow[i].X > dow[j].X)
+                    {
+                        Rectangle w = dow[i];
+                        dow[i] = dow[j];
+                        dow[j] = w;
+                    }
+                }
+            }
+
+            int x = 12;
+            int c_x = 0;
+
+            for (int i = 0; i < up.Count; i++)
+            {
+                Bitmap ch = grayframe.Clone(up[i], grayframe.PixelFormat);
+                string temp;
+                if (i < 2)
+                {
+                    temp = Ocr(ch, false, true); // nhan dien so
+                }
+                else
+                {
+                    temp = Ocr(ch, false, false);// nhan dien chu
+                }
+
+                zz += temp;
+                box[i].Location = new Point(x + i * 50, 290);
+                box[i].Size = new Size(50, 100);
+                box[i].SizeMode = PictureBoxSizeMode.StretchImage;
+                box[i].Image = ch;
+                box[i].Update();
+                //this.Controls.Add(box[i]);
+                IF.Controls.Add(box[i]);
+                c_x++;
+            }
+            zz += "\r\n";
+            for (int i = 0; i < dow.Count; i++)
+            {
+                Bitmap ch = grayframe.Clone(dow[i], grayframe.PixelFormat);
+                //ch = con.Erodetion(ch);
+                string temp = Ocr(ch, false, true); // nhan dien so
+                zz += temp;
+                box[i + c_x].Location = new Point(x + i * 50, 390);
+                box[i + c_x].Size = new Size(50, 100);
+                box[i + c_x].SizeMode = PictureBoxSizeMode.StretchImage;
+                box[i + c_x].Image = ch;
+                box[i + c_x].Update();
+                //this.Controls.Add(box[i + c_x]);
+                IF.Controls.Add(box[i + c_x]);
+            }
+            bienso = zz.Replace("\n", "");
+            bienso = bienso.Replace("\r", "");
+            IF.textBox6.Text = zz;
+            bienso_text = zz;
         }
 
         // Add missing event handlers
