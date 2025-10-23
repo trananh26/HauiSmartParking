@@ -850,69 +850,59 @@ namespace Auto_parking
             Image dst = image;
 
             // 2. Sử dụng file XML đã được huấn luyện để nhận diện biển số xe
-            Emgu.CV.CascadeClassifier cascade = new Emgu.CV.CascadeClassifier(Path.Combine(Application.StartupPath, "App_Data", "data", "output-hv-33-x25.xml"));
-
-            // 3. Quét ảnh với nhiều góc xoay
-            // Xoay từ -20° đến + 20° với bước nhảy 3°
-            for (float i = 0; i <= 20; i = i + 3)
+            using (CascadeClassifier cascade = new CascadeClassifier(Path.Combine(Application.StartupPath, "App_Data", "data", "output-hv-33-x25.xml")))
             {
-                for (float s = -1; s <= 1 && s + i != 1; s += 2)
+
+                // 3. Quét ảnh với nhiều góc xoay
+                // Xoay từ -20° đến + 20° với bước nhảy 3°
+                for (float i = 0; i <= 20; i = i + 3)
                 {
-                    var src = RotateImage(dst, i * s);
-                    PlateImagesList.Clear();
-                    var frame = src.ToBgrImage();
-
-                    using (Image<Gray, byte> grayframe = src.ToGrayImage())
+                    for (float s = -1; s <= 1 && s + i != 1; s += 2)
                     {
-                        // Use DetectMultiScale for Emgu.CV 3.x
-                        var faces = cascade.DetectMultiScale(
-                            grayframe,
-                            1.1,
-                            8,
-                            new Size(24, 24));
+                        var src = RotateImage(dst, i * s);
+                        PlateImagesList.Clear();
+                        var frame = src.ToBgrImage();
 
-
-                        // Nếu phát hiện nhiều vùng, chọn vùng tốt nhất
-                        if (faces.Length > 0)
+                        using (Image<Gray, byte> grayframe = src.ToGrayImage())
                         {
-                            var bestFace = SelectBestPlateRegion(faces);
+                            // Use DetectMultiScale for Emgu.CV 3.x
+                            var faces = cascade.DetectMultiScale(
+                                grayframe,
+                                1.1,
+                                8,
+                                new Size(24, 24));
 
-                            // Chỉ xử lý vùng tốt nhất
-                            Image<Bgr, byte> tmp = frame.Copy();
-                            tmp.ROI = bestFace;
 
-                            frame.Draw(bestFace, new Bgr(Color.Blue), 2);
-
-                            PlateImagesList.Add(tmp);
-
-                            isface = true;
-                        }
-
-                        if (isface)
-                        {
-                            Image<Bgr, byte> showimg = frame.Clone();
-                            plateDraw = showimg.ToBitmap();
-                            //showimg = frame.Resize(imageBox1.Width, imageBox1.Height, 0);
-                            //pictureBox1.Image = showimg.ToBitmap();
-                            DisposeImage(IF.pictureBox2);
-                            IF.pictureBox2.Image = showimg.ToBitmap();
-                            if (PlateImagesList.Count > 1)
+                            // Nếu phát hiện nhiều vùng, chọn vùng tốt nhất
+                            if (faces.Length > 0)
                             {
-                                for (int k = 1; k < PlateImagesList.Count; k++)
-                                {
-                                    if (PlateImagesList[0].Width < PlateImagesList[k].Width)
-                                    {
-                                        PlateImagesList[0] = PlateImagesList[k];
-                                    }
-                                }
+                                var bestFace = SelectBestPlateRegion(faces);
+
+                                // Chỉ xử lý vùng tốt nhất
+                                var tmp = frame.Copy();
+                                tmp.ROI = bestFace;
+                                frame.Draw(bestFace, new Bgr(Color.Blue), 2);
+
+                                PlateImagesList.Add(tmp);
+
+                                isface = true;
                             }
-                            PlateImagesList[0] = PlateImagesList[0].Resize(400, 400, Emgu.CV.CvEnum.Inter.Linear);
-                            return;
+
+                            if (isface)
+                            {
+                                var showimg = frame.Clone();
+                                plateDraw = showimg.ToBitmap();
+                                //showimg = frame.Resize(imageBox1.Width, imageBox1.Height, 0);
+                                //pictureBox1.Image = showimg.ToBitmap();
+                                DisposeImage(IF.pictureBox2);
+                                IF.pictureBox2.Image = showimg.ToBitmap();
+                                PlateImagesList[0] = PlateImagesList[0].Resize(400, 400, Emgu.CV.CvEnum.Inter.Linear);
+                                return;
+                            }
                         }
                     }
                 }
             }
-
         }
 
         /// <summary>
