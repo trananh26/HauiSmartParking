@@ -881,7 +881,7 @@ namespace Auto_parking
         }
 
         /// <summary>
-        /// Chọn vùng biển số tốt nhất
+        /// Chọn vùng biển số tốt nhất dựa trên tỷ lệ kích thước chuẩn của biển số Việt Nam
         /// </summary>
         /// <param name="detectedRegions">Mảng các vùng được phát hiện</param>
         /// <returns>Vùng Rectangle tốt nhất</returns>
@@ -889,6 +889,17 @@ namespace Auto_parking
         {
             if (detectedRegions.Length == 1)
                 return detectedRegions[0];
+
+            // Tỷ lệ kích thước chuẩn của biển số xe Việt Nam (rộng/cao)
+            // Ưu tiên từ trên xuống dưới
+            double[] standardRatios = new double[]
+                {
+                    330.0 / 165.0,  // 2.0
+                    520.0 / 110.0,  // 4.73
+                    190.0 / 140.0,  // 1.36
+                    280.0 / 200.0,  // 1.4
+                    470.0 / 110.0   // 4.27
+                };
 
             // 1. Loại bỏ các vùng chứa vùng khác (chọn vùng nhỏ hơn nếu 1 vùng chứa vùng kia)
             List<Rectangle> filteredCandidates = new List<Rectangle>(detectedRegions);
@@ -907,20 +918,73 @@ namespace Auto_parking
                 }
             }
 
-            // 2. Nếu không tìm thấy vùng nào phù hợp chọn vùng lớn nhất
+            // 2. Tính điểm cho mỗi vùng dựa trên tỷ lệ kích thước chuẩn
             Rectangle bestRegion = filteredCandidates[0];
+            double bestScore = CalculatePlateScore(bestRegion, standardRatios);
+
             foreach (Rectangle region in filteredCandidates)
             {
-                int currentArea = region.Width * region.Height;
-                int bestArea = bestRegion.Width * bestRegion.Height;
+                double score = CalculatePlateScore(region, standardRatios);
 
-                if (currentArea > bestArea)
+                if (score > bestScore)
                 {
+                    bestScore = score;
                     bestRegion = region;
                 }
             }
 
             return bestRegion;
+        }
+
+        /// <summary>
+        /// Tính điểm cho vùng dựa trên mức độ khớp với tỷ lệ chuẩn của biển số
+        /// </summary>
+        /// <param name="region">Vùng cần đánh giá</param>
+        /// <param name="standardRatios">Mảng các tỷ lệ chuẩn</param>
+        /// <returns>Điểm đánh giá (càng cao càng tốt)</returns>
+        private double CalculatePlateScore(Rectangle region, double[] standardRatios)
+        {
+            if (region.Width == 0 || region.Height == 0)
+                return 0;
+
+            double actualRatio = (double)region.Width / region.Height;
+            double minDifference = double.MaxValue;
+            int bestMatchIndex = 0;
+
+            // Tìm tỷ lệ chuẩn gần nhất
+            for (int i = 0; i < standardRatios.Length; i++)
+            {
+                double difference = Math.Abs(actualRatio - standardRatios[i]);
+                if (difference < minDifference)
+                {
+                    minDifference = difference;
+                    bestMatchIndex = i;
+                }
+            }
+
+            // Tính điểm:
+            // - Điểm cơ bản dựa trên độ khớp với tỷ lệ chuẩn (0-100)
+            // - Thưởng điểm cho các tỷ lệ ưu tiên cao hơn
+            // - Thưởng điểm cho diện tích hợp lý
+
+            double ratioScore = 100.0 / (1.0 + minDifference * 5.0);
+
+            // Thưởng điểm ưu tiên: tỷ lệ đầu tiên được điểm cao nhất
+            double priorityBonus = (standardRatios.Length - bestMatchIndex) * 2.0;
+
+            // Thưởng điểm cho diện tích hợp lý (không quá nhỏ, không quá lớn)
+            int area = region.Width * region.Height;
+            double areaScore = 0;
+            if (area >= 5000 && area <= 100000)
+            {
+                areaScore = 10.0;
+            }
+            else if (area >= 3000 && area <= 150000)
+            {
+                areaScore = 5.0;
+            }
+
+            return ratioScore + priorityBonus + areaScore;
         }
 
         /// <summary>
@@ -932,11 +996,11 @@ namespace Auto_parking
         private bool IsRectangleContained(Rectangle inner, Rectangle outer)
         {
             return inner.X >= outer.X &&
-                   inner.Y >= outer.Y &&
-                   inner.Right <= outer.Right &&
-                   inner.Bottom <= outer.Bottom &&
-                   !(inner.X == outer.X && inner.Y == outer.Y &&
-                     inner.Width == outer.Width && inner.Height == outer.Height);
+                 inner.Y >= outer.Y &&
+      inner.Right <= outer.Right &&
+      inner.Bottom <= outer.Bottom &&
+      !(inner.X == outer.X && inner.Y == outer.Y &&
+           inner.Width == outer.Width && inner.Height == outer.Height);
         }
 
         /// <summary>
