@@ -686,11 +686,10 @@ namespace Auto_parking
                         using (var image = new Bitmap(img))
                         {
                             //pictureBox2.Image = image;
-                            DisposeImage(IF.pictureBox2);
-                            IF.pictureBox2.Image = image;
+                            plateDraw = FindLicensePlate4(image);
                             fs.Close();
 
-                            plateDraw = FindLicensePlate4(image);
+                            //image.Dispose();  // Dispose here
                         }
                     }
                 }
@@ -867,8 +866,7 @@ namespace Auto_parking
                                 var bestFace = SelectBestPlateRegion(faces);
 
                                 // Chỉ xử lý vùng tốt nhất
-                                plateDraw = frame.Copy();
-                                plateDraw.ROI = bestFace;
+                                plateDraw = frame.Copy(bestFace);
                                 frame.Draw(bestFace, new Bgr(Color.Blue), 2);
 
                                 DisposeImage(IF.pictureBox2);
