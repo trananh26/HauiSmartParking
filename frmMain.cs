@@ -294,7 +294,6 @@ namespace Auto_parking
         #region định nghĩa
 
         List<Image<Bgr, byte>> PlateImagesList = new List<Image<Bgr, byte>>();
-        Image Plate_Draw;
         List<Rectangle> listRect = new List<Rectangle>();
         PictureBox[] box = new PictureBox[12];
 
@@ -677,8 +676,9 @@ namespace Auto_parking
             }
         }
 
-        public void ProcessImage(string urlImage)
+        public Image ProcessImage(string urlImage)
         {
+            Image plateDraw = null;
             try
             {
                 PlateImagesList.Clear();
@@ -693,7 +693,7 @@ namespace Auto_parking
                             IF.pictureBox2.Image = image;
                             fs.Close();
 
-                            Plate_Draw = FindLicensePlate4(image);
+                            plateDraw = FindLicensePlate4(image);
                         }
                     }
                 }
@@ -702,6 +702,7 @@ namespace Auto_parking
             {
                 MessageBox.Show("Không tìm được biển số. Vui lòng kiểm tra lại.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
+            return plateDraw;
         }
 
         public static Bitmap RotateImage(Image image, float angle)
@@ -982,7 +983,7 @@ namespace Auto_parking
             hinhbienso = null;
             bienso = "";
             bienso_text = "";
-            ProcessImage(link);
+            var plateDraw = ProcessImage(link);
             if (PlateImagesList.Count != 0)
             {
                 Bitmap plateBitmap = PlateImagesList[0].ToBitmap();
@@ -999,7 +1000,7 @@ namespace Auto_parking
                     DisposeImage(pic_BiensoVao1);
                     pic_BiensoVao2.Image = color;
                     IF.pictureBox1.Image = color;
-                    hinhbienso = Plate_Draw;
+                    hinhbienso = plateDraw;
                     pic_BiensoVao1.Image = grayframe;
                     IF.pictureBox3.Image = grayframe;
                 }
@@ -1011,7 +1012,7 @@ namespace Auto_parking
                     DisposeImage(pic_BiensoRa1);
                     pic_BiensoRa2.Image = color;
                     IF.pictureBox1.Image = color;
-                    hinhbienso = Plate_Draw;
+                    hinhbienso = plateDraw;
                     pic_BiensoRa1.Image = grayframe;
                     IF.pictureBox3.Image = grayframe;
                 }
