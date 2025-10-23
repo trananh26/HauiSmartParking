@@ -172,7 +172,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="App_Data\data\output-hv-33-x25.xml">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="App_Data\ImageTest\11059925-xexin8.jpg" />
     <Content Include="App_Data\ImageTest\11270327_896981600368358_5654267662891161986_o.jpg" />
@@ -207,23 +207,6 @@
     <Content Include="App_Data\ImageTest\HV-029.bmp" />
     <Content Include="App_Data\ImageTest\images.jpg" />
     <Content Include="App_Data\ImageTest\tra-cuu-bien-so-xe-2.jpg" />
-    <Content Include="lib\opencv_calib3d240.dll" />
-    <Content Include="lib\opencv_contrib240.dll" />
-    <Content Include="lib\opencv_core240.dll" />
-    <Content Include="lib\opencv_features2d240.dll" />
-    <Content Include="lib\opencv_ffmpeg240.dll" />
-    <Content Include="lib\opencv_flann240.dll" />
-    <Content Include="lib\opencv_gpu240.dll" />
-    <Content Include="lib\opencv_highgui240.dll" />
-    <Content Include="lib\opencv_imgproc240.dll" />
-    <Content Include="lib\opencv_legacy240.dll" />
-    <Content Include="lib\opencv_ml240.dll" />
-    <Content Include="lib\opencv_nonfree240.dll" />
-    <Content Include="lib\opencv_objdetect240.dll" />
-    <Content Include="lib\opencv_photo240.dll" />
-    <Content Include="lib\opencv_stitching240.dll" />
-    <Content Include="lib\opencv_video240.dll" />
-    <Content Include="lib\opencv_videostab240.dll" />
     <Content Include="Searchallwreckers-Car-Audi-TT.ico" />
   </ItemGroup>
   <ItemGroup>
@@ -242,8 +225,11 @@
     <PackageReference Include="AForge.Video.DirectShow">
       <Version>2.2.5</Version>
     </PackageReference>
-    <PackageReference Include="EMGU.CV">
-      <Version>3.4.1.2976</Version>
+    <PackageReference Include="Emgu.CV">
+      <Version>4.12.0.5764</Version>
+    </PackageReference>
+    <PackageReference Include="Emgu.CV.runtime.windows">
+      <Version>4.12.0.5764</Version>
     </PackageReference>
     <PackageReference Include="Microsoft.CSharp">
       <Version>4.7.0</Version>
