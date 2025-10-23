@@ -58,7 +58,6 @@ packages/
 
 ## Tệp tự động sinh
 ```
-*.Designer.cs
 *.Generated.cs
 *.g.cs
 *.g.i.cs

@@ -844,22 +844,23 @@ namespace Auto_parking
         /// plate is found.</param>
         public void FindLicensePlate4(Bitmap image, out Image plateDraw)
         {
+            // 1. Chuẩn bị biến để xử lý ảnh với Emgu CV
             plateDraw = null;
-            Image<Bgr, byte> frame;
             bool isface = false;
-            //pictureBox2.Image = new Image<Gray, byte>(image).ToBitmap();
             Image dst = image;
 
-            // Use CascadeClassifier for Emgu.CV 3.x instead of HaarCascade
+            // 2. Sử dụng file XML đã được huấn luyện để nhận diện biển số xe
             Emgu.CV.CascadeClassifier cascade = new Emgu.CV.CascadeClassifier(Path.Combine(Application.StartupPath, "App_Data", "data", "output-hv-33-x25.xml"));
 
+            // 3. Quét ảnh với nhiều góc xoay
+            //	Xoay từ -20° đến + 20° với bước nhảy 3°
             for (float i = 0; i <= 20; i = i + 3)
             {
                 for (float s = -1; s <= 1 && s + i != 1; s += 2)
                 {
                     var src = RotateImage(dst, i * s);
                     PlateImagesList.Clear();
-                    frame = src.ToBgrImage();
+                    var frame = src.ToBgrImage();
 
                     using (Image<Gray, byte> grayframe = src.ToGrayImage())
                     {
