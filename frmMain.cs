@@ -679,7 +679,6 @@ namespace Auto_parking
             Image<Bgr, byte> plateDraw = null;
             try
             {
-                PlateImagesList.Clear();
                 using (var fs = new FileStream(urlImage, FileMode.Open, FileAccess.Read))
                 {
                     using (var img = Image.FromStream(fs))
@@ -850,7 +849,6 @@ namespace Auto_parking
                     for (float s = -1; s <= 1 && s + i != 1; s += 2)
                     {
                         var src = RotateImage(dst, i * s);
-                        PlateImagesList.Clear();
                         var frame = src.ToBgrImage();
 
                         using (Image<Gray, byte> grayframe = src.ToGrayImage())
@@ -872,11 +870,8 @@ namespace Auto_parking
                                 plateDraw.ROI = bestFace;
                                 frame.Draw(bestFace, new Bgr(Color.Blue), 2);
 
-                                PlateImagesList.Add(plateDraw);
-
                                 DisposeImage(IF.pictureBox2);
                                 IF.pictureBox2.Image = plateDraw.ToBitmap();
-                                PlateImagesList[0] = PlateImagesList[0].Resize(400, 400, Inter.Linear);
                                 return plateDraw;
                             }
                         }
