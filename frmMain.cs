@@ -693,7 +693,7 @@ namespace Auto_parking
                             IF.pictureBox2.Image = image;
                             fs.Close();
 
-                            FindLicensePlate4(image, out Plate_Draw);
+                            Plate_Draw = FindLicensePlate4(image);
                         }
                     }
                 }
@@ -836,13 +836,11 @@ namespace Auto_parking
         /// detected region with a visual highlight. If no license plate is detected, the output parameter will be null.
         /// The method does not modify the input image.</remarks>
         /// <param name="image">The source image in which to search for a license plate. Must be a valid, non-null bitmap.</param>
-        /// <param name="plateDraw">When the method returns, contains a bitmap with the detected license plate region highlighted, or null if no
         /// plate is found.</param>
-        public void FindLicensePlate4(Bitmap image, out Image plateDraw)
+        public Image FindLicensePlate4(Bitmap image)
         {
             // 1. Chuẩn bị biến để xử lý ảnh với Emgu CV
-            plateDraw = null;
-            bool isface = false;
+            Image plateDraw = null;
             Image dst = image;
 
             // 2. Sử dụng file XML đã được huấn luyện để nhận diện biển số xe
@@ -879,24 +877,19 @@ namespace Auto_parking
 
                                 PlateImagesList.Add(tmp);
 
-                                isface = true;
-                            }
-
-                            if (isface)
-                            {
                                 var showimg = frame.Clone();
                                 plateDraw = showimg.ToBitmap();
-                                //showimg = frame.Resize(imageBox1.Width, imageBox1.Height, 0);
-                                //pictureBox1.Image = showimg.ToBitmap();
+
                                 DisposeImage(IF.pictureBox2);
                                 IF.pictureBox2.Image = showimg.ToBitmap();
-                                PlateImagesList[0] = PlateImagesList[0].Resize(400, 400, Emgu.CV.CvEnum.Inter.Linear);
-                                return;
+                                PlateImagesList[0] = PlateImagesList[0].Resize(400, 400, Inter.Linear);
+                                return plateDraw;
                             }
                         }
                     }
                 }
             }
+            return plateDraw;
         }
 
         /// <summary>
