@@ -165,8 +165,7 @@ namespace Auto_parking
                                 lblOutputTime.Visible = true;
                                 lblInputTime.Visible = true;
                                 lblMoney.Visible = true;
-                                DataTable dt = new DataTable();
-                                dt = cls.GetInfor(mathe.Substring(2, mathe.Length - 2), bienso);
+                                DataTable dt = cls.GetInfor(mathe.Substring(2, mathe.Length - 2), bienso);
 
                                 lblOutputTime.Text = DateTime.Now.ToString("dd/MM/yyyy HH:mm:ss");
                                 lblInputTime.Text = dt.Rows[0]["UpdateTime"].ToString();
@@ -747,8 +746,6 @@ namespace Auto_parking
             // Convert Bitmap to Image using extension method
             Image<Gray, byte> src = image_s.ToGrayImage();
 
-            double ratio = 1;
-
             // Count non-zero pixels for Emgu.CV 3.x
             int nonZeroCount = 0;
             using (Mat srcMat = src.Mat)
@@ -762,7 +759,7 @@ namespace Auto_parking
 
             while (true)
             {
-                ratio = (double)nonZeroCount / (src.Width * src.Height);
+                var ratio = (double)nonZeroCount / (src.Width * src.Height);
                 if (ratio > 0.5) break;
                 src = src.Dilate(2);
 
@@ -849,7 +846,7 @@ namespace Auto_parking
             {
                 // 3. Quét ảnh với nhiều góc xoay
                 // Xoay từ -20° đến + 20° với bước nhảy 3°
-                for (float i = 0; i <= 20; i = i + 3)
+                for (float i = 0; i <= 20; i += 3)
                 {
                     for (float s = -1; s <= 1 && s + i != 1; s += 2)
                     {
@@ -1248,11 +1245,8 @@ namespace Auto_parking
             num_tesseract?.Dispose();
 
             // Dispose OpenFileDialog singleton
-            if (_openFileDialog != null)
-            {
-                _openFileDialog.Dispose();
-                _openFileDialog = null;
-            }
+            _openFileDialog?.Dispose();
+            _openFileDialog = null;
         }
 
         private void btnTest_Click(object sender, EventArgs e)
