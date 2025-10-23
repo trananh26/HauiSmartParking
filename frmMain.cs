@@ -853,7 +853,7 @@ namespace Auto_parking
             Emgu.CV.CascadeClassifier cascade = new Emgu.CV.CascadeClassifier(Path.Combine(Application.StartupPath, "App_Data", "data", "output-hv-33-x25.xml"));
 
             // 3. Quét ảnh với nhiều góc xoay
-            //	Xoay từ -20° đến + 20° với bước nhảy 3°
+            // Xoay từ -20° đến + 20° với bước nhảy 3°
             for (float i = 0; i <= 20; i = i + 3)
             {
                 for (float s = -1; s <= 1 && s + i != 1; s += 2)
@@ -865,19 +865,29 @@ namespace Auto_parking
                     using (Image<Gray, byte> grayframe = src.ToGrayImage())
                     {
                         // Use DetectMultiScale for Emgu.CV 3.x
-                        Rectangle[] faces = cascade.DetectMultiScale(grayframe, 1.1, 8, new Size(0, 0));
+                        var faces = cascade.DetectMultiScale(
+                            grayframe,
+                            1.1,
+                            8,
+                            new Size(24, 24));
 
-                        foreach (Rectangle face in faces)
+
+                        // Nếu phát hiện nhiều vùng, chọn vùng tốt nhất
+                        if (faces.Length > 0)
                         {
-                            Image<Bgr, byte> tmp = frame.Copy();
-                            tmp.ROI = face;
+                            var bestFace = SelectBestPlateRegion(faces);
 
-                            frame.Draw(face, new Bgr(Color.Blue), 2);
+                            // Chỉ xử lý vùng tốt nhất
+                            Image<Bgr, byte> tmp = frame.Copy();
+                            tmp.ROI = bestFace;
+
+                            frame.Draw(bestFace, new Bgr(Color.Blue), 2);
 
                             PlateImagesList.Add(tmp);
 
                             isface = true;
                         }
+
                         if (isface)
                         {
                             Image<Bgr, byte> showimg = frame.Clone();
@@ -903,6 +913,65 @@ namespace Auto_parking
                 }
             }
 
+        }
+
+        /// <summary>
+        /// Chọn vùng biển số tốt nhất
+        /// </summary>
+        /// <param name="detectedRegions">Mảng các vùng được phát hiện</param>
+        /// <returns>Vùng Rectangle tốt nhất</returns>
+        private Rectangle SelectBestPlateRegion(Rectangle[] detectedRegions)
+        {
+            if (detectedRegions.Length == 1)
+                return detectedRegions[0];
+
+            // 1. Loại bỏ các vùng chứa vùng khác (chọn vùng nhỏ hơn nếu 1 vùng chứa vùng kia)
+            List<Rectangle> filteredCandidates = new List<Rectangle>(detectedRegions);
+            foreach (Rectangle candidate in detectedRegions)
+            {
+                foreach (Rectangle other in detectedRegions)
+                {
+                    if (candidate == other) continue;
+
+                    // Kiểm tra xem candidate có bị chứa trong other không
+                    if (IsRectangleContained(candidate, other))
+                    {
+                        filteredCandidates.Remove(other);
+                        break;
+                    }
+                }
+            }
+
+            // 2. Nếu không tìm thấy vùng nào phù hợp chọn vùng lớn nhất
+            Rectangle bestRegion = filteredCandidates[0];
+            foreach (Rectangle region in filteredCandidates)
+            {
+                int currentArea = region.Width * region.Height;
+                int bestArea = bestRegion.Width * bestRegion.Height;
+
+                if (currentArea > bestArea)
+                {
+                    bestRegion = region;
+                }
+            }
+
+            return bestRegion;
+        }
+
+        /// <summary>
+        /// Kiểm tra xem rectangle inner có bị chứa hoàn toàn trong rectangle outer không
+        /// </summary>
+        /// <param name="inner">Vùng bên trong</param>
+        /// <param name="outer">Vùng bên ngoài</param>
+        /// <returns>True nếu inner nằm hoàn toàn trong outer</returns>
+        private bool IsRectangleContained(Rectangle inner, Rectangle outer)
+        {
+            return inner.X >= outer.X &&
+                   inner.Y >= outer.Y &&
+                   inner.Right <= outer.Right &&
+                   inner.Bottom <= outer.Bottom &&
+                   !(inner.X == outer.X && inner.Y == outer.Y &&
+                     inner.Width == outer.Width && inner.Height == outer.Height);
         }
 
         /// <summary>
