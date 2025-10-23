@@ -826,7 +826,6 @@ namespace Auto_parking
             }
 
             return temp;
-
         }
 
         /// <summary>
@@ -849,7 +848,6 @@ namespace Auto_parking
             // 2. Sử dụng file XML đã được huấn luyện để nhận diện biển số xe
             using (CascadeClassifier cascade = new CascadeClassifier(Path.Combine(Application.StartupPath, "App_Data", "data", "output-hv-33-x25.xml")))
             {
-
                 // 3. Quét ảnh với nhiều góc xoay
                 // Xoay từ -20° đến + 20° với bước nhảy 3°
                 for (float i = 0; i <= 20; i = i + 3)
@@ -868,7 +866,6 @@ namespace Auto_parking
                                 1.1,
                                 8,
                                 new Size(24, 24));
-
 
                             // Nếu phát hiện nhiều vùng, chọn vùng tốt nhất
                             if (faces.Length > 0)
@@ -1160,7 +1157,6 @@ namespace Auto_parking
                 for (int i = 0; i < up.Count; i++)
                 {
                     Bitmap ch = grayframe.Clone(up[i], grayframe.PixelFormat);
-                    Bitmap o = ch;
                     string temp;
                     if (i < 2)
                     {
