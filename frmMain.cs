@@ -998,10 +998,8 @@ namespace Auto_parking
                 Bitmap plateBitmap = PlateImagesList[0].ToBitmap();
                 Image<Bgr, byte> src = plateBitmap.ToBgrImage();
 
-                Bitmap grayframe;
                 FindContours con = new FindContours();
-                Bitmap color;
-                int c = con.IdentifyContours(src.ToBitmap(), 50, false, out grayframe, out color, out listRect);
+                int c = con.IdentifyContours(src.ToBitmap(), 50, false, out Bitmap grayframe, out Bitmap color, out listRect);
                 //int z = con.count;
                 if (Type == 1)
                 {
@@ -1035,14 +1033,10 @@ namespace Auto_parking
                 string zz = "";
 
                 // lọc và sắp xếp số
-                List<Bitmap> bmp = new List<Bitmap>();
-                List<int> erode = new List<int>();
                 List<Rectangle> up = new List<Rectangle>();
                 List<Rectangle> dow = new List<Rectangle>();
                 int up_y = 0, dow_y = 0;
                 bool flag_up = false;
-
-                int di = 0;
 
                 if (listRect == null) return;
 
@@ -1094,10 +1088,8 @@ namespace Auto_parking
                         {
                             listRect.RemoveAt(i);
                             i--;
-                            di = 0;
                             break;
                         }
-                        di = cou;
                     }
                 }
 
