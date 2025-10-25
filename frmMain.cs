@@ -29,6 +29,16 @@ namespace Auto_parking
         // Reuse buffer để tránh tạo mảng mới liên tục
         private readonly object _serialLock = new object();
 
+        // Camera locks and throttling
+        private readonly object _camera1Lock = new object();
+        private readonly object _camera2Lock = new object();
+        private DateTime _lastFrameTime1 = DateTime.MinValue;
+        private DateTime _lastFrameTime2 = DateTime.MinValue;
+        private const int FRAME_INTERVAL_MS = 100; // Chỉ xử lý 10 frame/giây
+
+        // GC Timer
+        private System.Windows.Forms.Timer _gcTimer;
+
         // Cache paths
         private readonly string m_tesseractDataPath;
         private const string m_lang = "eng";
@@ -527,6 +537,19 @@ namespace Auto_parking
             IF = new frmImage();
 
             InitializeTesseract();
+
+            // Thêm timer để force GC định kỳ
+            _gcTimer = new System.Windows.Forms.Timer();
+            _gcTimer.Interval = 30000; // 30 giây
+            _gcTimer.Tick += GcTimer_Tick;
+            _gcTimer.Start();
+        }
+
+        private void GcTimer_Tick(object sender, EventArgs e)
+        {
+            // Force garbage collection để giải phóng memory
+            GC.Collect(GC.MaxGeneration, GCCollectionMode.Optimized);
+            GC.WaitForPendingFinalizers();
         }
 
         private void InitializeSerialPorts()
@@ -612,18 +635,110 @@ namespace Auto_parking
             }
         }
 
-        private void CaptureDevice2_NewFrame(object sender, NewFrameEventArgs eventArgs)
-        {
-            var oldImage = picInputCam.Image;
-            picInputCam.Image = (Bitmap)eventArgs.Frame.Clone();
-            oldImage?.Dispose();
-        }
-
+        /// <summary>
+        /// OPTIMIZED: Xử lý frame từ camera 1 với proper disposal và throttling
+        /// </summary>
         private void CaptureDevice1_NewFrame(object sender, NewFrameEventArgs eventArgs)
         {
-            var oldImage = picOutputCam.Image;
-            picOutputCam.Image = (Bitmap)eventArgs.Frame.Clone();
-            oldImage?.Dispose();
+            lock (_camera1Lock)
+            {
+                try
+                {
+                    // Throttle frame rate để giảm tải
+                    var now = DateTime.Now;
+                    if ((now - _lastFrameTime1).TotalMilliseconds < FRAME_INTERVAL_MS)
+                    {
+                        return;
+                    }
+                    _lastFrameTime1 = now;
+
+                    // Clone bitmap từ event args
+                    Bitmap newFrame = (Bitmap)eventArgs.Frame.Clone();
+
+                    // Sử dụng BeginInvoke để update UI thread an toàn
+                    if (picOutputCam.InvokeRequired)
+                    {
+                        picOutputCam.BeginInvoke(new Action(() =>
+                        {
+                            UpdatePictureBox(picOutputCam, newFrame);
+                        }));
+                    }
+                    else
+                    {
+                        UpdatePictureBox(picOutputCam, newFrame);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Camera 1 error: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// OPTIMIZED: Xử lý frame từ camera 2 với proper disposal và throttling
+        /// </summary>
+        private void CaptureDevice2_NewFrame(object sender, NewFrameEventArgs eventArgs)
+        {
+            lock (_camera2Lock)
+            {
+                try
+                {
+                    // Throttle frame rate để giảm tải
+                    var now = DateTime.Now;
+                    if ((now - _lastFrameTime2).TotalMilliseconds < FRAME_INTERVAL_MS)
+                    {
+                        return;
+                    }
+                    _lastFrameTime2 = now;
+
+                    // Clone bitmap từ event args
+                    Bitmap newFrame = (Bitmap)eventArgs.Frame.Clone();
+
+                    // Sử dụng BeginInvoke để update UI thread an toàn
+                    if (picInputCam.InvokeRequired)
+                    {
+                        picInputCam.BeginInvoke(new Action(() =>
+                        {
+                            UpdatePictureBox(picInputCam, newFrame);
+                        }));
+                    }
+                    else
+                    {
+                        UpdatePictureBox(picInputCam, newFrame);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Camera 2 error: {ex.Message}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Helper method để update PictureBox an toàn với proper disposal
+        /// </summary>
+        private void UpdatePictureBox(PictureBox pictureBox, Bitmap newImage)
+        {
+            try
+            {
+                // Lưu reference đến image cũ
+                var oldImage = pictureBox.Image;
+
+                // Gán image mới
+                pictureBox.Image = newImage;
+
+                // Dispose image cũ sau khi đã gán image mới
+                if (oldImage != null && oldImage != newImage)
+                {
+                    oldImage.Dispose();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"UpdatePictureBox error: {ex.Message}");
+                newImage?.Dispose();
+            }
         }
 
         // OPTIMIZED: Serial event với buffer management
@@ -1230,28 +1345,65 @@ namespace Auto_parking
         {
             try
             {
-                if (captureDevice1 != null && captureDevice1.IsRunning)
+                // Dừng timer
+                if (_gcTimer != null)
                 {
-                    captureDevice1.SignalToStop();
-                    captureDevice1.WaitForStop();
+                    _gcTimer.Stop();
+                    _gcTimer.Dispose();
                 }
-                if (captureDevice2 != null && captureDevice2.IsRunning)
+
+                // Dừng camera với timeout
+                StopCameraWithTimeout(captureDevice1, "Camera 1");
+                StopCameraWithTimeout(captureDevice2, "Camera 2");
+
+                // Đóng serial ports
+                CloseSerialPort(STM1_Serial);
+                CloseSerialPort(STM2_Serial);
+
+                // Clear PictureBox images
+                DisposeImage(picInputCam);
+                DisposeImage(picOutputCam);
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"FormClosing error: {ex.Message}");
+            }
+        }
+
+        private void StopCameraWithTimeout(VideoCaptureDevice device, string cameraName)
+        {
+            if (device != null && device.IsRunning)
+            {
+                try
                 {
-                    captureDevice2.SignalToStop();
-                    captureDevice2.WaitForStop();
+                    device.SignalToStop();
+                    
+                    // AForge WaitForStop không có timeout parameter
+                    device.WaitForStop();
+
+                    device.NewFrame -= (device == captureDevice1) 
+                     ? (NewFrameEventHandler)CaptureDevice1_NewFrame 
+                  : (NewFrameEventHandler)CaptureDevice2_NewFrame;
                 }
-                if (STM1_Serial != null && STM1_Serial.IsOpen)
+                catch (Exception ex)
                 {
-                    STM1_Serial.Close();
-                }
-                if (STM2_Serial != null && STM2_Serial.IsOpen)
-                {
-                    STM2_Serial.Close();
+                    System.Diagnostics.Debug.WriteLine($"Error stopping {cameraName}: {ex.Message}");
                 }
             }
-            catch (Exception)
+        }
+
+        private void CloseSerialPort(SerialPort port)
+        {
+            if (port != null && port.IsOpen)
             {
-                // Ignore errors during cleanup
+                try
+                {
+                    port.Close();
+                }
+                catch (Exception ex)
+                {
+                    System.Diagnostics.Debug.WriteLine($"Error closing serial port: {ex.Message}");
+                }
             }
         }
 
