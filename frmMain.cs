@@ -34,7 +34,7 @@ namespace Auto_parking
         private readonly object _camera2Lock = new object();
         private DateTime _lastFrameTime1 = DateTime.MinValue;
         private DateTime _lastFrameTime2 = DateTime.MinValue;
-        private const int FRAME_INTERVAL_MS = 100; // Chỉ xử lý 10 frame/giây
+        private const int FRAME_INTERVAL_MS = 150; // Chỉ xử lý 10 frame/giây
 
         // GC Timer
         private System.Windows.Forms.Timer _gcTimer;
