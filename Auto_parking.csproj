@@ -69,6 +69,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Utils\LicensePlateRecognizer.cs" />
     <Compile Include="Utils\BitmapExtension.cs" />
     <Compile Include="Database\clsCommon.cs" />
     <Compile Include="Database\DLDatabase.cs" />

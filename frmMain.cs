@@ -43,6 +43,8 @@ namespace Auto_parking
         private readonly string m_tesseractDataPath;
         private const string m_lang = "eng";
 
+        private LicensePlateRecognizer _plateRecognizer;
+
         // Singleton OpenFileDialog
         private OpenFileDialog _openFileDialog;
         private OpenFileDialog FileDialog
@@ -72,7 +74,6 @@ namespace Auto_parking
             InitializeComponent();
             CheckForIllegalCrossThreadCalls = false;
 
-            // Initialize paths once
             m_path = Path.Combine(Application.StartupPath, "data") + Path.DirectorySeparatorChar;
             m_tesseractDataPath = Path.Combine(Application.StartupPath, "App_Data", "data");
 
@@ -87,6 +88,9 @@ namespace Auto_parking
             {
                 box[i] = new PictureBox();
             }
+
+            string cascadePath = Path.Combine(Application.StartupPath, "App_Data", "data", "output-hv-33-x25.xml");
+            _plateRecognizer = new LicensePlateRecognizer(m_tesseractDataPath, cascadePath);
         }
 
         #endregion
@@ -318,10 +322,6 @@ namespace Auto_parking
 
         List<Rectangle> listRect = new List<Rectangle>();
         PictureBox[] box = new PictureBox[12];
-
-        public TesseractEngine full_tesseract = null;
-        public TesseractEngine ch_tesseract = null;
-        public TesseractEngine num_tesseract = null;
         private string m_path = Application.StartupPath + @"\data\";
 
         #endregion
@@ -446,7 +446,6 @@ namespace Auto_parking
             using (FileStream fs = new FileStream(tempImagePath, FileMode.Open, FileAccess.Read))
             using (Image temp = Image.FromStream(fs))
             {
-                // Clone image để tránh lock file
                 Image clonedImage = new Bitmap(temp);
 
                 if (Type == 1)
@@ -463,40 +462,111 @@ namespace Auto_parking
                     IF.pictureBox2.Image = new Bitmap(clonedImage);
                 }
 
-                string bienSoText = RecognizeFromFile(tempImagePath, Type);
-
-                if (Type == 1)
+                using (var result = _plateRecognizer.RecognizeFromFile(tempImagePath))
                 {
-                    txt_BiensoVao.Text = bienSoText;
-                }
-                else if (Type == 2)
-                {
-                    txt_BiensoRa.Text = bienSoText;
-                }
+                    if (!result.Success)
+                    {
+                        MessageBox.Show(result.ErrorMessage, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        return string.Empty;
+                    }
 
-                return bienSoText.Replace("\n", "").Replace("\r", "");
+                    DisplayRecognitionResult(Type, result);
+
+                    return result.PlateNumber;
+                }
             }
         }
 
-        private string RecognizeFromFile(string imagePath, int Type)
+        private void DisplayRecognitionResult(int Type, RecognitionResult result)
         {
-            Recognize(imagePath, Type, out Image hienBienSo, out string bienSo, out string bienSoText);
-
-            if (hienBienSo != null)
+            if (Type == 1)
             {
-                if (Type == 1)
+                DisposeImage(picInputPicture2);
+                picInputPicture2.Image = result.PlateImage != null ? new Bitmap(result.PlateImage) : null;
+
+                DisposeImage(pic_BiensoVao1);
+                DisposeImage(pic_BiensoVao2);
+                pic_BiensoVao1.Image = result.GrayImage != null ? new Bitmap(result.GrayImage) : null;
+                pic_BiensoVao2.Image = result.ColorImage != null ? new Bitmap(result.ColorImage) : null;
+
+                txt_BiensoVao.Text = result.PlateNumber;
+            }
+            else if (Type == 2)
+            {
+                DisposeImage(picOutputPicture2);
+                picOutputPicture2.Image = result.PlateImage != null ? new Bitmap(result.PlateImage) : null;
+
+                DisposeImage(pic_BiensoRa1);
+                DisposeImage(pic_BiensoRa2);
+                pic_BiensoRa1.Image = result.GrayImage != null ? new Bitmap(result.GrayImage) : null;
+                pic_BiensoRa2.Image = result.ColorImage != null ? new Bitmap(result.ColorImage) : null;
+
+                txt_BiensoRa.Text = result.PlateNumber;
+            }
+
+            if (IF != null)
+            {
+                DisposeImage(IF.pictureBox1);
+                DisposeImage(IF.pictureBox3);
+
+                IF.pictureBox1.Image = result.ColorImage != null ? new Bitmap(result.ColorImage) : null;
+                IF.pictureBox3.Image = result.GrayImage != null ? new Bitmap(result.GrayImage) : null;
+                IF.textBox6.Text = result.FormattedText;
+
+                DisplayCharacterBoxes(result);
+            }
+        }
+
+        private void DisplayCharacterBoxes(RecognitionResult result)
+        {
+            if (IF == null) return;
+
+            for (int i = 0; i < box.Length; i++)
+            {
+                IF.Controls.Remove(box[i]);
+                DisposeImage(box[i]);
+            }
+
+            int boxIndex = 0;
+            int x = 12;
+
+            if (result.UpperCharacters != null && result.GrayImage != null)
+            {
+                foreach (var rect in result.UpperCharacters)
                 {
-                    DisposeImage(picInputPicture2);
-                    picInputPicture2.Image = hienBienSo;
-                }
-                else if (Type == 2)
-                {
-                    DisposeImage(picOutputPicture2);
-                    picOutputPicture2.Image = hienBienSo;
+                    if (boxIndex >= box.Length) break;
+
+                    using (Bitmap charImg = result.GrayImage.Clone(rect, result.GrayImage.PixelFormat))
+                    {
+                        box[boxIndex].Location = new Point(x + boxIndex * 50, 290);
+                        box[boxIndex].Size = new Size(50, 100);
+                        box[boxIndex].SizeMode = PictureBoxSizeMode.StretchImage;
+                        box[boxIndex].Image = new Bitmap(charImg);
+                        IF.Controls.Add(box[boxIndex]);
+                        boxIndex++;
+                    }
                 }
             }
 
-            return bienSoText ?? string.Empty;
+            if (result.LowerCharacters != null && result.GrayImage != null)
+            {
+                int startIndex = boxIndex;
+                foreach (var rect in result.LowerCharacters)
+                {
+                    if (boxIndex >= box.Length) break;
+
+                    using (Bitmap charImg = result.GrayImage.Clone(rect, result.GrayImage.PixelFormat))
+                    {
+                        int localIndex = boxIndex - startIndex;
+                        box[boxIndex].Location = new Point(x + localIndex * 50, 390);
+                        box[boxIndex].Size = new Size(50, 100);
+                        box[boxIndex].SizeMode = PictureBoxSizeMode.StretchImage;
+                        box[boxIndex].Image = new Bitmap(charImg);
+                        IF.Controls.Add(box[boxIndex]);
+                        boxIndex++;
+                    }
+                }
+            }
         }
 
         private void tm_AutoReconnect_Tick(object sender, EventArgs e)
@@ -536,11 +606,8 @@ namespace Auto_parking
 
             IF = new frmImage();
 
-            InitializeTesseract();
-
-            // Thêm timer để force GC định kỳ
             _gcTimer = new System.Windows.Forms.Timer();
-            _gcTimer.Interval = 30000; // 30 giây
+            _gcTimer.Interval = 30000;
             _gcTimer.Tick += GcTimer_Tick;
             _gcTimer.Start();
         }
@@ -573,26 +640,6 @@ namespace Auto_parking
             }
             catch (Exception)
             {
-                // Ignore errors
-            }
-        }
-
-        private void InitializeTesseract()
-        {
-            try
-            {
-                full_tesseract = new TesseractEngine(m_tesseractDataPath, m_lang, EngineMode.Default);
-                full_tesseract.SetVariable("tessedit_char_whitelist", "ABCDEFHKLMNPRSTVXY1234567890");
-
-                ch_tesseract = new TesseractEngine(m_tesseractDataPath, m_lang, EngineMode.Default);
-                ch_tesseract.SetVariable("tessedit_char_whitelist", "ABCDEFHKLMNPRSTUVXY");
-
-                num_tesseract = new TesseractEngine(m_tesseractDataPath, m_lang, EngineMode.Default);
-                num_tesseract.SetVariable("tessedit_char_whitelist", "1234567890");
-            }
-            catch (Exception ex)
-            {
-                MessageBox.Show("Lỗi khởi tạo Tesseract OCR: " + ex.Message, "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 
@@ -787,554 +834,8 @@ namespace Auto_parking
                 }
                 catch
                 {
-                    // Ignore errors
                 }
             }
-        }
-
-        // OPTIMIZED: ProcessImage with using statements
-        public Image<Bgr, byte> ProcessImage(string urlImage)
-        {
-            try
-            {
-                using (var fs = new FileStream(urlImage, FileMode.Open, FileAccess.Read))
-                using (var img = Image.FromStream(fs))
-                using (var image = new Bitmap(img))
-                {
-                    return FindLicensePlate4(image);
-                }
-            }
-            catch
-            {
-                MessageBox.Show("Không tìm được biển số. Vui lòng kiểm tra lại.", "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
-                return null;
-            }
-        }
-
-        public static Bitmap RotateImage(Image image, float angle)
-        {
-            if (image == null)
-                throw new ArgumentNullException("image");
-
-            PointF offset = new PointF((float)image.Width / 2, (float)image.Height / 2);
-
-            Bitmap rotatedBmp = new Bitmap(image.Width, image.Height);
-            rotatedBmp.SetResolution(image.HorizontalResolution, image.VerticalResolution);
-
-            using (Graphics g = Graphics.FromImage(rotatedBmp))
-            {
-                g.TranslateTransform(offset.X, offset.Y);
-                g.RotateTransform(angle);
-                g.TranslateTransform(-offset.X, -offset.Y);
-                g.DrawImage(image, new PointF(0, 0));
-            }
-
-            return rotatedBmp;
-        }
-
-        // OPTIMIZED: OCR with proper disposal
-        private string Ocr(Bitmap image_s, bool isFull, bool isNum = false)
-        {
-            string temp = "";
-
-            using (Image<Gray, byte> src = image_s.ToGrayImage())
-            {
-                int nonZeroCount = CountNonZero(src);
-                Image<Gray, byte> processed = src;
-
-                while (true)
-                {
-                    var ratio = (double)nonZeroCount / (src.Width * src.Height);
-                    if (ratio > 0.5) break;
-
-                    var dilated = processed.Dilate(2);
-                    if (processed != src) processed.Dispose();
-                    processed = dilated;
-
-                    nonZeroCount = CountNonZero(processed);
-                }
-
-                using (Bitmap image = processed.ToBitmap())
-                {
-                    TesseractEngine ocr = isFull ? full_tesseract : (isNum ? num_tesseract : ch_tesseract);
-                    temp = PerformOCR(image, ocr);
-                }
-
-                if (processed != src) processed.Dispose();
-            }
-
-            return temp;
-        }
-
-        // Helper method for counting non-zero pixels
-        private int CountNonZero(Image<Gray, byte> src)
-        {
-            using (Mat srcMat = src.Mat)
-            using (Mat mask = new Mat())
-            {
-                Mat zeroMat = new Mat(srcMat.Size, srcMat.Depth, srcMat.NumberOfChannels);
-                zeroMat.SetTo(new MCvScalar(0));
-                CvInvoke.Compare(srcMat, zeroMat, mask, CmpType.NotEqual);
-                int count = CvInvoke.CountNonZero(mask);
-                zeroMat.Dispose();
-                return count;
-            }
-        }
-
-        // Helper method for OCR
-        private string PerformOCR(Bitmap image, TesseractEngine ocr)
-        {
-            string temp = "";
-            int cou = 0;
-
-            try
-            {
-                using (Pix pix = PixConverter.ToPix(image))
-                using (Page page = ocr.Process(pix))
-                {
-                    temp = page.GetText().Trim();
-                }
-
-                Bitmap workingImage = image;
-                while (temp.Length > 3 && cou < 10)
-                {
-                    using (Image<Gray, byte> temp2 = workingImage.ToGrayImage())
-                    using (Image<Gray, byte> eroded = temp2.Erode(2))
-                    {
-                        if (workingImage != image)
-                            workingImage.Dispose();
-
-                        workingImage = eroded.ToBitmap();
-                    }
-
-                    using (Pix pix = PixConverter.ToPix(workingImage))
-                    using (Page page = ocr.Process(pix))
-                    {
-                        temp = page.GetText().Trim();
-                    }
-
-                    cou++;
-                }
-
-                if (workingImage != image)
-                    workingImage.Dispose();
-            }
-            catch (Exception)
-            {
-                temp = "";
-            }
-
-            return temp;
-        }
-
-        public Image<Bgr, byte> FindLicensePlate4(Bitmap image)
-        {
-            // 1. Chuẩn bị biến để xử lý ảnh với Emgu CV
-            Image<Bgr, byte> plateDraw = null;
-            Image dst = image;
-
-            string cascadePath = Path.Combine(Application.StartupPath, "App_Data", "data", "output-hv-33-x25.xml");
-            using (CascadeClassifier cascade = new CascadeClassifier(cascadePath))
-            {
-                // 3. Quét ảnh với nhiều góc xoay
-                // Xoay từ -20° đến + 20° với bước nhảy 3°
-                for (float i = 0; i <= 20; i += 3)
-                {
-                    for (float s = -1; s <= 1 && s + i != 1; s += 2)
-                    {
-                        using (var src = RotateImage(dst, i * s))
-                        using (var frame = src.ToBgrImage())
-                        using (Image<Gray, byte> grayframe = src.ToGrayImage())
-                        {
-                            // Use DetectMultiScale for Emgu.CV 3.x
-                            var faces = cascade.DetectMultiScale(
-                         grayframe,
-                                 1.1,
-                           8,
-                         new Size(24, 24));
-
-                            // Nếu phát hiện nhiều vùng, chọn vùng tốt nhất
-                            if (faces.Length > 0)
-                            {
-                                var bestFace = SelectBestPlateRegion(faces);
-
-                                // Chỉ xử lý vùng tốt nhất
-                                plateDraw = frame.Copy(bestFace);
-                                frame.Draw(bestFace, new Bgr(Color.Blue), 2);
-
-                                if (IF != null)
-                                {
-                                    DisposeImage(IF.pictureBox2);
-                                    IF.pictureBox2.Image = plateDraw.ToBitmap();
-                                }
-
-                                return plateDraw;
-                            }
-                        }
-                    }
-                }
-            }
-
-            return plateDraw;
-        }
-
-        private Rectangle SelectBestPlateRegion(Rectangle[] detectedRegions)
-        {
-            if (detectedRegions.Length == 1)
-                return detectedRegions[0];
-
-            // Tỷ lệ kích thước chuẩn của biển số xe Việt Nam (rộng/cao)
-            // Ưu tiên từ trên xuống dưới
-            double[] standardRatios = new double[]
-        {
-        330.0 / 165.0,  // 2.0
-        520.0 / 110.0,  // 4.73
-        190.0 / 140.0,  // 1.36
-        280.0 / 200.0,  // 1.4
-        470.0 / 110.0   // 4.27
-        };
-
-            List<Rectangle> filteredCandidates = new List<Rectangle>(detectedRegions);
-            foreach (Rectangle candidate in detectedRegions)
-            {
-                foreach (Rectangle other in detectedRegions)
-                {
-                    if (candidate == other) continue;
-
-                    if (IsRectangleContained(candidate, other))
-                    {
-                        filteredCandidates.Remove(other);
-                        break;
-                    }
-                }
-            }
-
-            // 2. Tính điểm cho mỗi vùng dựa trên tỷ lệ kích thước chuẩn
-            Rectangle bestRegion = filteredCandidates[0];
-            double bestScore = CalculatePlateScore(bestRegion, standardRatios);
-
-            foreach (Rectangle region in filteredCandidates)
-            {
-                double score = CalculatePlateScore(region, standardRatios);
-
-                if (score > bestScore)
-                {
-                    bestScore = score;
-                    bestRegion = region;
-                }
-            }
-
-            return bestRegion;
-        }
-
-        private double CalculatePlateScore(Rectangle region, double[] standardRatios)
-        {
-            if (region.Width == 0 || region.Height == 0)
-                return 0;
-
-            double actualRatio = (double)region.Width / region.Height;
-            double minDifference = double.MaxValue;
-            int bestMatchIndex = 0;
-
-            for (int i = 0; i < standardRatios.Length; i++)
-            {
-                double difference = Math.Abs(actualRatio - standardRatios[i]);
-                if (difference < minDifference)
-                {
-                    minDifference = difference;
-                    bestMatchIndex = i;
-                }
-            }
-
-            double ratioScore = 100.0 / (1.0 + minDifference * 5.0);
-            double priorityBonus = (standardRatios.Length - bestMatchIndex) * 2.0;
-
-            int area = region.Width * region.Height;
-            double areaScore = 0;
-            if (area >= 5000 && area <= 100000)
-            {
-                areaScore = 10.0;
-            }
-            else if (area >= 3000 && area <= 150000)
-            {
-                areaScore = 5.0;
-            }
-
-            return ratioScore + priorityBonus + areaScore;
-        }
-
-        private bool IsRectangleContained(Rectangle inner, Rectangle outer)
-        {
-            return inner.X >= outer.X &&
-              inner.Y >= outer.Y &&
-             inner.Right <= outer.Right &&
-      inner.Bottom <= outer.Bottom &&
-              !(inner.X == outer.X && inner.Y == outer.Y &&
-            inner.Width == outer.Width && inner.Height == outer.Height);
-        }
-
-        // OPTIMIZED: Recognize with proper disposal
-        private void Recognize(string link, int Type, out Image hinhbienso, out string bienso, out string bienso_text)
-        {
-            // ...existing code...
-            DisposeImage(pic_BiensoVao1);
-            DisposeImage(pic_BiensoVao2);
-            DisposeImage(pic_BiensoRa1);
-            DisposeImage(pic_BiensoRa2);
-
-            for (int i = 0; i < box.Length; i++)
-            {
-                this.Controls.Remove(box[i]);
-            }
-
-            hinhbienso = null;
-            bienso = "";
-            bienso_text = "";
-
-            using (var plateDraw = ProcessImage(link))
-            {
-                if (plateDraw == null) return;
-
-                using (var resized = plateDraw.Resize(400, 400, Inter.Linear))
-                {
-                    ProcessPlateRecognition(resized, Type, out hinhbienso, out bienso, out bienso_text);
-                }
-            }
-        }
-
-        private void ProcessPlateRecognition(Image<Bgr, byte> plateDraw, int Type, out Image hinhbienso, out string bienso, out string bienso_text)
-        {
-            var con = new FindContours();
-
-            using (Bitmap plateImage = plateDraw.ToBitmap())
-            {
-                int c = con.IdentifyContours(plateImage, 50, false, out Bitmap grayframe, out Bitmap color, out listRect);
-
-                SetRecognitionImages(Type, color, grayframe, plateDraw.ToBitmap());
-                hinhbienso = plateDraw.ToBitmap();
-
-                string zz = ExtractTextFromContours(grayframe, listRect);
-
-                bienso = zz.Replace("\n", "").Replace("\r", "");
-                bienso_text = zz;
-
-                if (IF != null)
-                {
-                    IF.textBox6.Text = zz;
-                }
-
-                // Dispose bitmaps
-                grayframe?.Dispose();
-                color?.Dispose();
-            }
-        }
-
-        private void SetRecognitionImages(int Type, Bitmap color, Bitmap grayframe, Bitmap plate)
-        {
-            if (Type == 1)
-            {
-                DisposeImage(pic_BiensoVao2);
-                DisposeImage(pic_BiensoVao1);
-                pic_BiensoVao2.Image = new Bitmap(color);
-                pic_BiensoVao1.Image = new Bitmap(grayframe);
-
-                if (IF != null)
-                {
-                    DisposeImage(IF.pictureBox1);
-                    DisposeImage(IF.pictureBox3);
-                    IF.pictureBox1.Image = new Bitmap(color);
-                    IF.pictureBox3.Image = new Bitmap(grayframe);
-                }
-            }
-            else if (Type == 2)
-            {
-                DisposeImage(pic_BiensoRa2);
-                DisposeImage(pic_BiensoRa1);
-                pic_BiensoRa2.Image = new Bitmap(color);
-                pic_BiensoRa1.Image = new Bitmap(grayframe);
-
-                if (IF != null)
-                {
-                    DisposeImage(IF.pictureBox1);
-                    DisposeImage(IF.pictureBox3);
-                    IF.pictureBox1.Image = new Bitmap(color);
-                    IF.pictureBox3.Image = new Bitmap(grayframe);
-                }
-            }
-        }
-
-        private string ExtractTextFromContours(Bitmap grayframe, List<Rectangle> rectangles)
-        {
-            if (rectangles == null || rectangles.Count == 0)
-                return string.Empty;
-
-            using (Image<Gray, byte> dst = grayframe.ToGrayImage())
-            {
-                using (Bitmap processedGray = dst.ToBitmap())
-                {
-                    FilterAndSortRectangles(processedGray, rectangles, out List<Rectangle> up, out List<Rectangle> dow);
-
-                    string zz = "";
-                    int c_x = 0;
-
-                    zz += ProcessRectangleList(processedGray, up, 0, ref c_x, 290);
-                    zz += "\r\n";
-                    zz += ProcessRectangleList(processedGray, dow, c_x, ref c_x, 390);
-
-                    return zz;
-                }
-            }
-        }
-
-        private void FilterAndSortRectangles(Bitmap grayframe, List<Rectangle> listRect, out List<Rectangle> up, out List<Rectangle> dow)
-        {
-            // ...existing code...
-            up = new List<Rectangle>();
-            dow = new List<Rectangle>();
-            int up_y = 0, dow_y = 0;
-            bool flag_up = false;
-
-            // Remove invalid rectangles
-            for (int i = 0; i < listRect.Count; i++)
-            {
-                using (Bitmap ch = grayframe.Clone(listRect[i], grayframe.PixelFormat))
-                {
-                    string temp = "";
-                    int cou = 0;
-
-                    try
-                    {
-                        using (Pix pix = PixConverter.ToPix(ch))
-                        using (Page page = full_tesseract.Process(pix))
-                        {
-                            temp = page.GetText().Trim();
-                        }
-                    }
-                    catch
-                    {
-                        temp = "";
-                    }
-
-                    while (temp.Length > 3 && cou < 10)
-                    {
-                        using (Image<Gray, byte> temp2 = ch.ToGrayImage())
-                        using (Image<Gray, byte> eroded = temp2.Erode(2))
-                        using (Bitmap erodedBmp = eroded.ToBitmap())
-                        {
-                            try
-                            {
-                                using (Pix pix = PixConverter.ToPix(erodedBmp))
-                                using (Page page = full_tesseract.Process(pix))
-                                {
-                                    temp = page.GetText().Trim();
-                                }
-                            }
-                            catch
-                            {
-                                temp = "";
-                            }
-                        }
-
-                        cou++;
-                    }
-
-                    if (cou > 10)
-                    {
-                        listRect.RemoveAt(i);
-                        i--;
-                    }
-                }
-            }
-
-            // Find up and down rows
-            for (int i = 0; i < listRect.Count; i++)
-            {
-                for (int j = i; j < listRect.Count; j++)
-                {
-                    if (listRect[i].Y > listRect[j].Y + 100)
-                    {
-                        flag_up = true;
-                        up_y = listRect[j].Y;
-                        dow_y = listRect[i].Y;
-                        break;
-                    }
-                    else if (listRect[j].Y > listRect[i].Y + 100)
-                    {
-                        flag_up = true;
-                        up_y = listRect[i].Y;
-                        dow_y = listRect[j].Y;
-                        break;
-                    }
-                    if (flag_up) break;
-                }
-                if (flag_up) break;
-            }
-
-            // Separate into up and down lists
-            for (int i = 0; i < listRect.Count; i++)
-            {
-                if (listRect[i].Y < up_y + 50 && listRect[i].Y > up_y - 50)
-                {
-                    up.Add(listRect[i]);
-                }
-                else if (listRect[i].Y < dow_y + 50 && listRect[i].Y > dow_y - 50)
-                {
-                    dow.Add(listRect[i]);
-                }
-            }
-
-            if (!flag_up)
-                dow = new List<Rectangle>(listRect);
-
-            // Sort by X coordinate
-            up.Sort((a, b) => a.X.CompareTo(b.X));
-            dow.Sort((a, b) => a.X.CompareTo(b.X));
-        }
-
-        private string ProcessRectangleList(Bitmap grayframe, List<Rectangle> rects, int startIndex, ref int c_x, int yPosition)
-        {
-            string result = "";
-            int x = 12;
-
-            for (int i = 0; i < rects.Count; i++)
-            {
-                using (Bitmap ch = grayframe.Clone(rects[i], grayframe.PixelFormat))
-                {
-                    string temp;
-                    if (yPosition == 290 && i < 2)
-                    {
-                        temp = Ocr(ch, false, true);
-                    }
-                    else if (yPosition == 290)
-                    {
-                        temp = Ocr(ch, false, false);
-                    }
-                    else
-                    {
-                        temp = Ocr(ch, false, true);
-                    }
-
-                    result += temp;
-
-                    if (box[startIndex + i] != null)
-                    {
-                        box[startIndex + i].Location = new Point(x + i * 50, yPosition);
-                        box[startIndex + i].Size = new Size(50, 100);
-                        box[startIndex + i].SizeMode = PictureBoxSizeMode.StretchImage;
-                        DisposeImage(box[startIndex + i]);
-                        box[startIndex + i].Image = new Bitmap(ch);
-                        box[startIndex + i].Update();
-
-                        if (IF != null)
-                        {
-                            IF.Controls.Add(box[startIndex + i]);
-                        }
-                    }
-                }
-                c_x++;
-            }
-
-            return result;
         }
 
         private void picInputCam_Click(object sender, EventArgs e) { }
@@ -1377,12 +878,12 @@ namespace Auto_parking
                 try
                 {
                     device.SignalToStop();
-                    
+
                     // AForge WaitForStop không có timeout parameter
                     device.WaitForStop();
 
-                    device.NewFrame -= (device == captureDevice1) 
-                     ? (NewFrameEventHandler)CaptureDevice1_NewFrame 
+                    device.NewFrame -= (device == captureDevice1)
+                     ? (NewFrameEventHandler)CaptureDevice1_NewFrame
                   : (NewFrameEventHandler)CaptureDevice2_NewFrame;
                 }
                 catch (Exception ex)
@@ -1409,14 +910,10 @@ namespace Auto_parking
 
         private void MainForm_FormClosed(object sender, FormClosedEventArgs e)
         {
-            full_tesseract?.Dispose();
-            ch_tesseract?.Dispose();
-            num_tesseract?.Dispose();
-
+            _plateRecognizer?.Dispose();
             _openFileDialog?.Dispose();
             _openFileDialog = null;
 
-            // Dispose PictureBox array
             for (int i = 0; i < box.Length; i++)
             {
                 DisposeImage(box[i]);
