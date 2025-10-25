@@ -92,9 +92,9 @@ namespace Auto_parking
 
             try
             {
-                using (var fs = new FileStream(imagePath, FileMode.Open, FileAccess.Read))
-                using (var img = Image.FromStream(fs))
-                using (var bitmap = new Bitmap(img))
+                using (FileStream fs = new FileStream(imagePath, FileMode.Open, FileAccess.Read))
+                using (Image img = Image.FromStream(fs))
+                using (Bitmap bitmap = new Bitmap(img))
                 {
                     return RecognizeFromBitmap(bitmap);
                 }
@@ -116,7 +116,7 @@ namespace Auto_parking
 
             try
             {
-                using (var plateRegion = FindLicensePlateRegion(image))
+                using (Image<Bgr, byte> plateRegion = FindLicensePlateRegion(image))
                 {
                     if (plateRegion == null)
                     {
@@ -127,8 +127,8 @@ namespace Auto_parking
                         };
                     }
 
-                    using (var resized = plateRegion.Resize(400, 400, Inter.Linear))
-                    using (var plateBitmap = resized.ToBitmap())
+                    using (Image<Bgr, byte> resized = plateRegion.Resize(400, 400, Inter.Linear))
+                    using (Bitmap plateBitmap = resized.ToBitmap())
                     {
                         return ExtractAndRecognizeCharacters(plateBitmap);
                     }
@@ -156,7 +156,7 @@ namespace Auto_parking
                 {
                     for (float sign = -1; sign <= 1 && sign + angle != 1; sign += 2)
                     {
-                        var plateRegion = DetectPlateAtAngle(image, cascade, angle * sign);
+                        Image<Bgr, byte> plateRegion = DetectPlateAtAngle(image, cascade, angle * sign);
                         if (plateRegion != null)
                             return plateRegion;
                     }
@@ -168,11 +168,11 @@ namespace Auto_parking
 
         private Image<Bgr, byte> DetectPlateAtAngle(Bitmap image, CascadeClassifier cascade, float angle)
         {
-            using (var rotated = RotateImage(image, angle))
-            using (var frame = rotated.ToBgrImage())
-            using (var grayframe = rotated.ToGrayImage())
+            using (Bitmap rotated = RotateImage(image, angle))
+            using (Image<Bgr, byte> frame = rotated.ToBgrImage())
+            using (Image<Gray, byte> grayframe = rotated.ToGrayImage())
             {
-                var faces = cascade.DetectMultiScale(
+                Rectangle[] faces = cascade.DetectMultiScale(
                                         grayframe,
                                         1.1,
                                         8,
@@ -180,7 +180,7 @@ namespace Auto_parking
 
                 if (faces.Length > 0)
                 {
-                    var bestFace = SelectBestPlateRegion(faces);
+                    Rectangle bestFace = SelectBestPlateRegion(faces);
                     return frame.Copy(bestFace);
                 }
             }
@@ -222,7 +222,7 @@ namespace Auto_parking
                             470.0 / 110.0
                         };
 
-            var filteredCandidates = FilterOverlappingRegions(detectedRegions);
+            List<Rectangle> filteredCandidates = FilterOverlappingRegions(detectedRegions);
 
             Rectangle bestRegion = filteredCandidates[0];
             double bestScore = CalculatePlateScore(bestRegion, standardRatios);
@@ -242,7 +242,7 @@ namespace Auto_parking
 
         private List<Rectangle> FilterOverlappingRegions(Rectangle[] regions)
         {
-            var filtered = new List<Rectangle>(regions);
+            List<Rectangle> filtered = new List<Rectangle>(regions);
 
             foreach (Rectangle candidate in regions)
             {
@@ -309,7 +309,7 @@ namespace Auto_parking
 
         private RecognitionResult ExtractAndRecognizeCharacters(Bitmap plateImage)
         {
-            var con = new FindContours();
+            FindContours con = new FindContours();
 
             int count = con.IdentifyContours(
                                 plateImage,
@@ -505,10 +505,10 @@ namespace Auto_parking
 
                 while (true)
                 {
-                    var ratio = (double)nonZeroCount / (src.Width * src.Height);
+                    double ratio = (double)nonZeroCount / (src.Width * src.Height);
                     if (ratio > 0.5) break;
 
-                    var dilated = processed.Dilate(2);
+                    Image<Gray, byte> dilated = processed.Dilate(2);
                     if (processed != src) processed.Dispose();
                     processed = dilated;
 
@@ -589,30 +589,4 @@ namespace Auto_parking
 
         #endregion
     }
-
-    #region Result Class
-
-    public class RecognitionResult : IDisposable
-    {
-        public bool Success { get; set; }
-        public string PlateNumber { get; set; }
-        public string FormattedText { get; set; }
-        public string ErrorMessage { get; set; }
-
-        public Bitmap PlateImage { get; set; }
-        public Bitmap GrayImage { get; set; }
-        public Bitmap ColorImage { get; set; }
-
-        public List<Rectangle> UpperCharacters { get; set; }
-        public List<Rectangle> LowerCharacters { get; set; }
-
-        public void Dispose()
-        {
-            PlateImage?.Dispose();
-            GrayImage?.Dispose();
-            ColorImage?.Dispose();
-        }
-    }
-
-    #endregion
 }

@@ -1,8 +1,5 @@
 ﻿using AForge.Video;
 using AForge.Video.DirectShow;
-using Emgu.CV;
-using Emgu.CV.CvEnum;
-using Emgu.CV.Structure;
 using System;
 using System.Collections.Generic;
 using System.Data;
@@ -11,7 +8,6 @@ using System.IO;
 using System.IO.Ports;
 using System.Threading;
 using System.Windows.Forms;
-using Tesseract;
 
 namespace Auto_parking
 {
@@ -427,14 +423,14 @@ namespace Auto_parking
             }
             else if (Type == 1 && picInputCam.Image != null)
             {
-                using (var clone = new Bitmap(picInputCam.Image))
+                using (Bitmap clone = new Bitmap(picInputCam.Image))
                 {
                     clone.Save(tempImagePath, System.Drawing.Imaging.ImageFormat.Bmp);
                 }
             }
             else if (Type == 2 && picOutputCam.Image != null)
             {
-                using (var clone = new Bitmap(picOutputCam.Image))
+                using (Bitmap clone = new Bitmap(picOutputCam.Image))
                 {
                     clone.Save(tempImagePath, System.Drawing.Imaging.ImageFormat.Bmp);
                 }
@@ -462,7 +458,7 @@ namespace Auto_parking
                     IF.pictureBox2.Image = new Bitmap(clonedImage);
                 }
 
-                using (var result = _plateRecognizer.RecognizeFromFile(tempImagePath))
+                using (RecognitionResult result = _plateRecognizer.RecognizeFromFile(tempImagePath))
                 {
                     if (!result.Success)
                     {
@@ -532,7 +528,7 @@ namespace Auto_parking
 
             if (result.UpperCharacters != null && result.GrayImage != null)
             {
-                foreach (var rect in result.UpperCharacters)
+                foreach (Rectangle rect in result.UpperCharacters)
                 {
                     if (boxIndex >= box.Length) break;
 
@@ -551,7 +547,7 @@ namespace Auto_parking
             if (result.LowerCharacters != null && result.GrayImage != null)
             {
                 int startIndex = boxIndex;
-                foreach (var rect in result.LowerCharacters)
+                foreach (Rectangle rect in result.LowerCharacters)
                 {
                     if (boxIndex >= box.Length) break;
 
@@ -648,7 +644,7 @@ namespace Auto_parking
         {
             if (pictureBox == null) return;
 
-            var oldImage = pictureBox.Image;
+            Image oldImage = pictureBox.Image;
             pictureBox.Image = null;
             oldImage?.Dispose();
         }
@@ -663,13 +659,13 @@ namespace Auto_parking
         {
             try
             {
-                var filterInfo = new FilterInfoCollection(FilterCategory.VideoInputDevice);
+                FilterInfoCollection filterInfo = new FilterInfoCollection(FilterCategory.VideoInputDevice);
 
                 captureDevice1 = new VideoCaptureDevice(filterInfo[0].MonikerString);
                 captureDevice1.NewFrame += CaptureDevice1_NewFrame;
                 captureDevice1.Start();
 
-                var cam2Index = filterInfo.Count > 1 ? 1 : 0;
+                int cam2Index = filterInfo.Count > 1 ? 1 : 0;
                 captureDevice2 = new VideoCaptureDevice(filterInfo[cam2Index].MonikerString);
                 captureDevice2.NewFrame += CaptureDevice2_NewFrame;
                 captureDevice2.Start();
@@ -692,7 +688,7 @@ namespace Auto_parking
                 try
                 {
                     // Throttle frame rate để giảm tải
-                    var now = DateTime.Now;
+                    DateTime now = DateTime.Now;
                     if ((now - _lastFrameTime1).TotalMilliseconds < FRAME_INTERVAL_MS)
                     {
                         return;
@@ -732,7 +728,7 @@ namespace Auto_parking
                 try
                 {
                     // Throttle frame rate để giảm tải
-                    var now = DateTime.Now;
+                    DateTime now = DateTime.Now;
                     if ((now - _lastFrameTime2).TotalMilliseconds < FRAME_INTERVAL_MS)
                     {
                         return;
@@ -770,7 +766,7 @@ namespace Auto_parking
             try
             {
                 // Lưu reference đến image cũ
-                var oldImage = pictureBox.Image;
+                Image oldImage = pictureBox.Image;
 
                 // Gán image mới
                 pictureBox.Image = newImage;
@@ -883,7 +879,7 @@ namespace Auto_parking
                     device.WaitForStop();
 
                     device.NewFrame -= (device == captureDevice1)
-                     ? (NewFrameEventHandler)CaptureDevice1_NewFrame
+                     ? CaptureDevice1_NewFrame
                   : (NewFrameEventHandler)CaptureDevice2_NewFrame;
                 }
                 catch (Exception ex)
