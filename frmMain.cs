@@ -17,7 +17,7 @@ namespace Auto_parking
 
         delegate void SetTextCallback(string text);
         private clsCommon cls = new clsCommon();
-        private frmImage IF;
+        private frmImage frmImage;
         private string o_Sensor;
         private bool IsFire;
         delegate void MyDelegate();
@@ -388,6 +388,7 @@ namespace Auto_parking
             }
             finally
             {
+                frmImage.ShowDialog();
                 // Force cleanup
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
@@ -405,9 +406,9 @@ namespace Auto_parking
             DisposeImage(pic_BiensoVao1);
             DisposeImage(pic_BiensoVao2);
 
-            if (IF != null)
+            if (frmImage != null)
             {
-                DisposeImage(IF.pictureBox2);
+                DisposeImage(frmImage.pictureBox2);
             }
 
             txt_BiensoVao.Text = string.Empty;
@@ -453,9 +454,9 @@ namespace Auto_parking
                     picOutputPicture1.Image = clonedImage;
                 }
 
-                if (IF != null)
+                if (frmImage != null)
                 {
-                    IF.pictureBox2.Image = new Bitmap(clonedImage);
+                    frmImage.pictureBox2.Image = new Bitmap(clonedImage);
                 }
 
                 using (RecognitionResult result = _plateRecognizer.RecognizeFromFile(tempImagePath))
@@ -500,14 +501,14 @@ namespace Auto_parking
                 txt_BiensoRa.Text = result.PlateNumber;
             }
 
-            if (IF != null)
+            if (frmImage != null)
             {
-                DisposeImage(IF.pictureBox1);
-                DisposeImage(IF.pictureBox3);
+                DisposeImage(frmImage.pictureBox1);
+                DisposeImage(frmImage.pictureBox3);
 
-                IF.pictureBox1.Image = result.ColorImage != null ? new Bitmap(result.ColorImage) : null;
-                IF.pictureBox3.Image = result.GrayImage != null ? new Bitmap(result.GrayImage) : null;
-                IF.textBox6.Text = result.FormattedText;
+                frmImage.pictureBox1.Image = result.ColorImage != null ? new Bitmap(result.ColorImage) : null;
+                frmImage.pictureBox3.Image = result.GrayImage != null ? new Bitmap(result.GrayImage) : null;
+                frmImage.textBox6.Text = result.FormattedText;
 
                 DisplayCharacterBoxes(result);
             }
@@ -515,11 +516,11 @@ namespace Auto_parking
 
         private void DisplayCharacterBoxes(RecognitionResult result)
         {
-            if (IF == null) return;
+            if (frmImage == null) return;
 
             for (int i = 0; i < box.Length; i++)
             {
-                IF.Controls.Remove(box[i]);
+                frmImage.Controls.Remove(box[i]);
                 DisposeImage(box[i]);
             }
 
@@ -538,7 +539,7 @@ namespace Auto_parking
                         box[boxIndex].Size = new Size(50, 100);
                         box[boxIndex].SizeMode = PictureBoxSizeMode.StretchImage;
                         box[boxIndex].Image = new Bitmap(charImg);
-                        IF.Controls.Add(box[boxIndex]);
+                        frmImage.Controls.Add(box[boxIndex]);
                         boxIndex++;
                     }
                 }
@@ -558,7 +559,7 @@ namespace Auto_parking
                         box[boxIndex].Size = new Size(50, 100);
                         box[boxIndex].SizeMode = PictureBoxSizeMode.StretchImage;
                         box[boxIndex].Image = new Bitmap(charImg);
-                        IF.Controls.Add(box[boxIndex]);
+                        frmImage.Controls.Add(box[boxIndex]);
                         boxIndex++;
                     }
                 }
@@ -600,7 +601,7 @@ namespace Auto_parking
 
             InitializeSerialPorts();
 
-            IF = new frmImage();
+            frmImage = new frmImage();
 
             _gcTimer = new System.Windows.Forms.Timer();
             _gcTimer.Interval = 30000;
@@ -916,7 +917,7 @@ namespace Auto_parking
                 box[i]?.Dispose();
             }
 
-            IF?.Dispose();
+            frmImage?.Dispose();
         }
 
         private void btnTest_Click(object sender, EventArgs e)
