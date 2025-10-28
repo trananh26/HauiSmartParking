@@ -17,7 +17,7 @@ namespace Auto_parking
 
         delegate void SetTextCallback(string text);
         private clsCommon cls = new clsCommon();
-        private frmImage frmImage;
+        private frmImage frmShowImage;
         private string o_Sensor;
         private bool IsFire;
         delegate void MyDelegate();
@@ -381,7 +381,7 @@ namespace Auto_parking
             }
             finally
             {
-                frmImage.ShowDialog();
+                frmShowImage?.ShowDialog();
                 // Force cleanup
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
@@ -399,9 +399,9 @@ namespace Auto_parking
             DisposeImage(pic_BiensoVao1);
             DisposeImage(pic_BiensoVao2);
 
-            if (frmImage != null)
+            if (frmShowImage != null)
             {
-                DisposeImage(frmImage.pictureBox2);
+                DisposeImage(frmShowImage.pictureBox2);
             }
 
             txt_BiensoVao.Text = string.Empty;
@@ -447,9 +447,9 @@ namespace Auto_parking
                     picOutputPicture1.Image = clonedImage;
                 }
 
-                if (frmImage != null)
+                if (frmShowImage != null)
                 {
-                    frmImage.pictureBox2.Image = new Bitmap(clonedImage);
+                    frmShowImage.pictureBox2.Image = new Bitmap(clonedImage);
                 }
 
                 using (RecognitionResult result = _plateRecognizer.RecognizeFromFile(tempImagePath))
@@ -494,14 +494,14 @@ namespace Auto_parking
                 txt_BiensoRa.Text = result.PlateNumber;
             }
 
-            if (frmImage != null)
+            if (frmShowImage != null)
             {
-                DisposeImage(frmImage.pictureBox1);
-                DisposeImage(frmImage.pictureBox3);
+                DisposeImage(frmShowImage.pictureBox1);
+                DisposeImage(frmShowImage.pictureBox3);
 
-                frmImage.pictureBox1.Image = result.ColorImage != null ? new Bitmap(result.ColorImage) : null;
-                frmImage.pictureBox3.Image = result.GrayImage != null ? new Bitmap(result.GrayImage) : null;
-                frmImage.textBox6.Text = result.FormattedText;
+                frmShowImage.pictureBox1.Image = result.ColorImage != null ? new Bitmap(result.ColorImage) : null;
+                frmShowImage.pictureBox3.Image = result.GrayImage != null ? new Bitmap(result.GrayImage) : null;
+                frmShowImage.textBox6.Text = result.FormattedText;
 
                 DisplayCharacterBoxes(result);
             }
@@ -509,7 +509,7 @@ namespace Auto_parking
 
         private void DisplayCharacterBoxes(RecognitionResult result)
         {
-            if (frmImage == null) return;
+            if (frmShowImage == null) return;
 
             // Tạo mảng box local
             PictureBox[] box = new PictureBox[12];
@@ -533,7 +533,7 @@ namespace Auto_parking
                         box[boxIndex].Size = new Size(50, 100);
                         box[boxIndex].SizeMode = PictureBoxSizeMode.StretchImage;
                         box[boxIndex].Image = new Bitmap(charImg);
-                        frmImage.Controls.Add(box[boxIndex]);
+                        frmShowImage?.Controls.Add(box[boxIndex]);
                         boxIndex++;
                     }
                 }
@@ -553,7 +553,7 @@ namespace Auto_parking
                         box[boxIndex].Size = new Size(50, 100);
                         box[boxIndex].SizeMode = PictureBoxSizeMode.StretchImage;
                         box[boxIndex].Image = new Bitmap(charImg);
-                        frmImage.Controls.Add(box[boxIndex]);
+                        frmShowImage?.Controls.Add(box[boxIndex]);
                         boxIndex++;
                     }
                 }
@@ -595,7 +595,8 @@ namespace Auto_parking
 
             InitializeSerialPorts();
 
-            frmImage = new frmImage();
+            frmShowImage = new frmImage();
+            //frmShowImage = null;
 
             _gcTimer = new System.Windows.Forms.Timer();
             _gcTimer.Interval = 30000;
@@ -905,7 +906,7 @@ namespace Auto_parking
             _openFileDialog?.Dispose();
             _openFileDialog = null;
 
-            frmImage?.Dispose();
+            frmShowImage?.Dispose();
         }
 
         private void btnTest_Click(object sender, EventArgs e)
