@@ -79,12 +79,6 @@ namespace Auto_parking
                 Directory.CreateDirectory(m_path);
             }
 
-            // Initialize PictureBox array once
-            for (int i = 0; i < box.Length; i++)
-            {
-                box[i] = new PictureBox();
-            }
-
             string cascadePath = Path.Combine(Application.StartupPath, "App_Data", "data", "output-hv-33-x25.xml");
             _plateRecognizer = new LicensePlateRecognizer(m_tesseractDataPath, cascadePath);
         }
@@ -317,7 +311,6 @@ namespace Auto_parking
         #region định nghĩa
 
         List<Rectangle> listRect = new List<Rectangle>();
-        PictureBox[] box = new PictureBox[12];
         private string m_path = Application.StartupPath + @"\data\";
 
         #endregion
@@ -518,10 +511,11 @@ namespace Auto_parking
         {
             if (frmImage == null) return;
 
+            // Tạo mảng box local
+            PictureBox[] box = new PictureBox[12];
             for (int i = 0; i < box.Length; i++)
             {
-                frmImage.Controls.Remove(box[i]);
-                DisposeImage(box[i]);
+                box[i] = new PictureBox();
             }
 
             int boxIndex = 0;
@@ -910,12 +904,6 @@ namespace Auto_parking
             _plateRecognizer?.Dispose();
             _openFileDialog?.Dispose();
             _openFileDialog = null;
-
-            for (int i = 0; i < box.Length; i++)
-            {
-                DisposeImage(box[i]);
-                box[i]?.Dispose();
-            }
 
             frmImage?.Dispose();
         }
