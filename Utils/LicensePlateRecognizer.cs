@@ -377,6 +377,7 @@ namespace Auto_parking
             up = new List<Rectangle>();
             down = new List<Rectangle>();
 
+            // Remove invalid rectangles in reverse order to avoid index issues
             for (int i = listRect.Count - 1; i >= 0; i--)
             {
                 if (IsInvalidRectangle(grayframe, listRect[i]))
@@ -417,22 +418,36 @@ namespace Auto_parking
                 string temp = PerformOCR(ch, _fullTesseract);
                 int erosionCount = 0;
 
-                Bitmap workingBitmap = ch;
-                while (temp.Length > 3 && erosionCount < 10)
+                // Early exit if OCR already succeeded
+                if (temp.Length <= 3)
+                    return false;
+
+                Image<Gray, byte> workingImage = ch.ToGrayImage();
+                try
                 {
-                    using (Image<Gray, byte> tempImg = workingBitmap.ToGrayImage())
-                    using (Image<Gray, byte> eroded = tempImg.Erode(2))
+                    while (temp.Length > 3 && erosionCount < 10)
                     {
-                        workingBitmap = eroded.ToBitmap();
-                        temp = PerformOCR(workingBitmap, _fullTesseract);
+                        using (Image<Gray, byte> eroded = workingImage.Erode(2))
+                        {
+                            if (workingImage != null && workingImage.Equals(ch.ToGrayImage()) == false)
+                                workingImage.Dispose();
+
+                            workingImage = eroded.Clone();
+
+                            using (Bitmap erodedBitmap = eroded.ToBitmap())
+                            {
+                                temp = PerformOCR(erodedBitmap, _fullTesseract);
+                            }
+                        }
+                        erosionCount++;
                     }
-                    erosionCount++;
+
+                    return erosionCount >= 10;
                 }
-
-                if (workingBitmap != ch)
-                    workingBitmap.Dispose();
-
-                return erosionCount > 10;
+                finally
+                {
+                    workingImage?.Dispose();
+                }
             }
         }
 
@@ -477,7 +492,9 @@ namespace Auto_parking
                 {
                     charImages.Add((Bitmap)charImage.Clone());
 
-                    string character = RecognizeCharacter(charImage, isUpperRow, i);
+                    // Determine OCR engine based on position and row type
+                    bool useNumEngine = ShouldUseNumericEngine(isUpperRow, i);
+                    string character = RecognizeCharacter(charImage, useNumEngine);
                     result += character;
                 }
             }
@@ -485,49 +502,73 @@ namespace Auto_parking
             return (result, charImages);
         }
 
-        private string RecognizeCharacter(Bitmap charImage, bool isUpperRow, int position)
+        private bool ShouldUseNumericEngine(bool isUpperRow, int position)
         {
-            if (isUpperRow && position < 2)
-            {
-                return Ocr(charImage, false, true);
-            }
-            else if (isUpperRow)
-            {
-                return Ocr(charImage, false, false);
-            }
-            else
-            {
-                return Ocr(charImage, false, true);
-            }
+            // For upper row: use numeric engine for positions 0-1, letter engine for others
+            // For lower row: use numeric engine
+            if (!isUpperRow)
+                return true;
+
+            return position < 2;
         }
 
-        private string Ocr(Bitmap image, bool isFull, bool isNum = false)
+        private string RecognizeCharacter(Bitmap charImage, bool useNumericEngine)
+        {
+            return Ocr(charImage, useNumericEngine);
+        }
+
+        private string Ocr(Bitmap image, bool useNumericEngine)
+        {
+            // Use pre-initialized Tesseract engines
+            TesseractEngine targetEngine = useNumericEngine ? _numTesseract : _chTesseract;
+
+            // First attempt: direct OCR on original image
+            string result = PerformOCR(image, targetEngine);
+
+            // If result is empty or too long, try with image enhancement
+            if (string.IsNullOrEmpty(result) || result.Length > 3)
+            {
+                result = PerformOCRWithEnhancement(image, targetEngine);
+            }
+
+            return result;
+        }
+
+        private string PerformOCRWithEnhancement(Bitmap image, TesseractEngine ocr)
         {
             using (Image<Gray, byte> src = image.ToGrayImage())
             {
                 int nonZeroCount = CountNonZero(src);
                 Image<Gray, byte> processed = src;
+                bool shouldDispose = false;
 
-                while (true)
+                try
                 {
-                    double ratio = (double)nonZeroCount / (src.Width * src.Height);
-                    if (ratio > 0.5) break;
+                    // Dilate image if pixel density is too low
+                    while (true)
+                    {
+                        double ratio = (double)nonZeroCount / (src.Width * src.Height);
+                        if (ratio > 0.5)
+                            break;
 
-                    Image<Gray, byte> dilated = processed.Dilate(2);
-                    if (processed != src) processed.Dispose();
-                    processed = dilated;
+                        Image<Gray, byte> dilated = processed.Dilate(2);
+                        if (shouldDispose)
+                            processed.Dispose();
 
-                    nonZeroCount = CountNonZero(processed);
+                        processed = dilated;
+                        shouldDispose = true;
+                        nonZeroCount = CountNonZero(processed);
+                    }
+
+                    using (Bitmap processedBitmap = processed.ToBitmap())
+                    {
+                        return PerformOCR(processedBitmap, ocr);
+                    }
                 }
-
-                using (Bitmap processedBitmap = processed.ToBitmap())
+                finally
                 {
-                    TesseractEngine ocr = isFull ? _fullTesseract : (isNum ? _numTesseract : _chTesseract);
-                    string result = PerformOCR(processedBitmap, ocr);
-
-                    if (processed != src) processed.Dispose();
-
-                    return result;
+                    if (shouldDispose)
+                        processed.Dispose();
                 }
             }
         }
@@ -536,60 +577,77 @@ namespace Auto_parking
         {
             using (Mat srcMat = src.Mat)
             using (Mat mask = new Mat())
+            using (Mat zeroMat = new Mat(srcMat.Size, srcMat.Depth, srcMat.NumberOfChannels))
             {
-                Mat zeroMat = new Mat(srcMat.Size, srcMat.Depth, srcMat.NumberOfChannels);
                 zeroMat.SetTo(new MCvScalar(0));
                 CvInvoke.Compare(srcMat, zeroMat, mask, CmpType.NotEqual);
-                int count = CvInvoke.CountNonZero(mask);
-                zeroMat.Dispose();
-                return count;
+                return CvInvoke.CountNonZero(mask);
             }
         }
 
         private string PerformOCR(Bitmap image, TesseractEngine ocr)
         {
-            string result = "";
+            if (image == null || ocr == null)
+                return "";
 
             try
             {
                 using (Pix pix = PixConverter.ToPix(image))
                 using (Page page = ocr.Process(pix))
                 {
-                    result = page.GetText().Trim();
+                    string result = page.GetText().Trim();
+
+                    // If OCR result is still too long, try erosion
+                    if (result.Length > 3)
+                    {
+                        result = PerformOCRWithErosion(image, ocr);
+                    }
+
+                    return result;
                 }
+            }
+            catch (Exception)
+            {
+                return "";
+            }
+        }
 
-                Bitmap workingImage = image;
-                int count = 0;
+        private string PerformOCRWithErosion(Bitmap image, TesseractEngine ocr)
+        {
+            Bitmap workingImage = image;
+            string result = "";
+            int erosionCount = 0;
 
-                while (result.Length > 3 && count < 10)
+            try
+            {
+                while (result.Length > 3 && erosionCount < 10)
                 {
                     using (Image<Gray, byte> temp = workingImage.ToGrayImage())
                     using (Image<Gray, byte> eroded = temp.Erode(2))
                     {
-                        if (workingImage != image)
-                            workingImage.Dispose();
-
+                        Bitmap previousImage = workingImage;
                         workingImage = eroded.ToBitmap();
+
+                        if (previousImage != image)
+                            previousImage.Dispose();
+
+                        using (Pix pix = PixConverter.ToPix(workingImage))
+                        using (Page page = ocr.Process(pix))
+                        {
+                            result = page.GetText().Trim();
+                        }
                     }
 
-                    using (Pix pix = PixConverter.ToPix(workingImage))
-                    using (Page page = ocr.Process(pix))
-                    {
-                        result = page.GetText().Trim();
-                    }
-
-                    count++;
+                    erosionCount++;
                 }
 
+                return result;
+            }
+            finally
+            {
                 if (workingImage != image)
                     workingImage.Dispose();
             }
-            catch (Exception)
-            {
-                result = "";
-            }
-
-            return result;
         }
 
         #endregion
