@@ -65,13 +65,13 @@ namespace Auto_parking
             try
             {
                 _fullTesseract = new TesseractEngine(_tesseractDataPath, LANG, EngineMode.Default);
-                _fullTesseract.SetVariable("tessedit_char_whitelist", "ABCDEFHKLMNPRSTVXY1234567890");
+                _fullTesseract.SetVariable("tessedit_char_whitelist", "ABCDEFHKLMNPRSTVXY0123456789");
 
                 _chTesseract = new TesseractEngine(_tesseractDataPath, LANG, EngineMode.Default);
                 _chTesseract.SetVariable("tessedit_char_whitelist", "ABCDEFHKLMNPRSTUVXY");
 
                 _numTesseract = new TesseractEngine(_tesseractDataPath, LANG, EngineMode.Default);
-                _numTesseract.SetVariable("tessedit_char_whitelist", "1234567890");
+                _numTesseract.SetVariable("tessedit_char_whitelist", "0123456789");
             }
             catch (Exception ex)
             {
@@ -493,8 +493,8 @@ namespace Auto_parking
                     charImages.Add((Bitmap)charImage.Clone());
 
                     // Determine OCR engine based on position and row type
-                    bool useNumEngine = ShouldUseNumericEngine(isUpperRow, i);
-                    string character = RecognizeCharacter(charImage, useNumEngine);
+                    bool useNumericEngine = ShouldUseNumericEngine(isUpperRow, i);
+                    string character = Ocr(charImage, useNumericEngine);
                     result += character;
                 }
             }
@@ -510,11 +510,6 @@ namespace Auto_parking
                 return true;
 
             return position < 2;
-        }
-
-        private string RecognizeCharacter(Bitmap charImage, bool useNumericEngine)
-        {
-            return Ocr(charImage, useNumericEngine);
         }
 
         private string Ocr(Bitmap image, bool useNumericEngine)
@@ -593,7 +588,7 @@ namespace Auto_parking
             try
             {
                 using (Pix pix = PixConverter.ToPix(image))
-                using (Page page = ocr.Process(pix))
+                using (Page page = ocr.Process(pix, PageSegMode.SingleChar))
                 {
                     string result = page.GetText().Trim();
 
