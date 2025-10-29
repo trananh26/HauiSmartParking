@@ -11,13 +11,17 @@ namespace Auto_parking
     class FindContours
     {
         public int count = 0;
+        
         /// <summary>
-        /// Method used to process the image and set the output result images.
+        /// Identifies rectangular contours in the specified color image using adaptive thresholding and contour analysis.
         /// </summary>
-        /// <param name="colorImage">Source color image.</param>
-        /// <param name="thresholdValue">Value used for thresholding.</param>
-        /// <param name="processedGray">Resulting gray image.</param>
-        /// <param name="processedColor">Resulting color image.</param>
+        /// <param name="colorImage"></param>
+        /// <param name="thresholdValue"></param>
+        /// <param name="invert"></param>
+        /// <param name="processedGray"></param>
+        /// <param name="processedColor"></param>
+        /// <param name="listRectangles"></param>
+        /// <returns>The number of contours detected that meet the specified criteria.</returns>
         public int IdentifyContours(
             Bitmap colorImage,
             int thresholdValue,
@@ -36,14 +40,12 @@ namespace Auto_parking
 
             try
             {
-                #region Conversion To grayscale
+                // Conversion To grayscale
                 grayImage = colorImage.ToGrayImage();
                 bi = new Image<Gray, byte>(grayImage.Width, grayImage.Height);
                 color = colorImage.ToBgrImage();
-                #endregion
 
-                #region tim gia tri thresh de co so ky tu lon nhat
-
+                // tim gia tri thresh de co so ky tu lon nhat
                 double thr = grayImage.GetAverage().Intensity;
                 if (thr == 0)
                 {
@@ -189,9 +191,7 @@ namespace Auto_parking
                     if (li[i].Height != 0) listRectangles.Add(li[i]);
                 }
 
-                #endregion
-
-                #region Assigning output
+                // Assigning output
                 processedColor = finalColor.ToBitmap();
                 processedGray = finalGrayImage.ToBitmap();
 
@@ -199,7 +199,6 @@ namespace Auto_parking
                 finalColor.Dispose();
                 finalGrayImage.Dispose();
                 finalBi.Dispose();
-                #endregion
             }
             finally
             {
@@ -215,319 +214,5 @@ namespace Auto_parking
             return count;
         }
 
-        private double cout_avg(Image<Gray, byte> src)
-        {
-            double d = 0;
-            List<Rectangle> lsR = new List<Rectangle>();
-            Image<Gray, byte> grayImage = null;
-            Image<Gray, byte> dilated = null;
-            Image<Gray, byte> eroded = null;
-
-            try
-            {
-                grayImage = new Image<Gray, byte>(src.Width, src.Height);
-                CvInvoke.AdaptiveThreshold(src, grayImage, 255, AdaptiveThresholdType.MeanC, ThresholdType.Binary, 21, 2);
-                dilated = grayImage.Dilate(3);
-                eroded = dilated.Erode(3);
-
-                using (VectorOfVectorOfPoint contours = new VectorOfVectorOfPoint())
-                {
-                    CvInvoke.FindContours(eroded, contours, null, RetrType.List, ChainApproxMethod.ChainApproxSimple);
-
-                    for (int i = 0; i < contours.Size; i++)
-                    {
-                        using (VectorOfPoint contour = contours[i])
-                        {
-                            Rectangle rect = CvInvoke.BoundingRectangle(contour);
-
-                            if (rect.Width > 50 && rect.Width < 150
-                                       && rect.Height > 80 && rect.Height < 150)
-                            {
-                                lsR.Add(rect);
-                            }
-                        }
-                    }
-                }
-
-                Bitmap tmpBitmap = null;
-                try
-                {
-                    tmpBitmap = src.ToBitmap();
-
-                    for (int i = 0; i < lsR.Count; i++)
-                    {
-                        Bitmap tmp2 = null;
-                        Image<Gray, byte> tmp3 = null;
-
-                        try
-                        {
-                            tmp2 = tmpBitmap.Clone(lsR[i], tmpBitmap.PixelFormat);
-                            tmp3 = tmp2.ToGrayImage();
-                            d += tmp3.GetAverage().Intensity / lsR.Count;
-                        }
-                        finally
-                        {
-                            if (tmp2 != null) tmp2.Dispose();
-                            if (tmp3 != null) tmp3.Dispose();
-                        }
-                    }
-                }
-                finally
-                {
-                    if (tmpBitmap != null) tmpBitmap.Dispose();
-                }
-            }
-            finally
-            {
-                if (grayImage != null) grayImage.Dispose();
-                if (dilated != null) dilated.Dispose();
-                if (eroded != null) eroded.Dispose();
-            }
-
-            return d;
-        }
-
-        private double cout_avg_new(Image<Gray, byte> src)
-        {
-            double d = 0;
-            List<Rectangle> lsR = new List<Rectangle>();
-            Image<Gray, byte> grayImage = null;
-            Image<Gray, byte> dilated = null;
-            Image<Gray, byte> eroded = null;
-
-            try
-            {
-                grayImage = new Image<Gray, byte>(src.Width, src.Height);
-                CvInvoke.AdaptiveThreshold(src, grayImage, 255, AdaptiveThresholdType.MeanC, ThresholdType.Binary, 21, 2);
-
-                dilated = grayImage.Dilate(3);
-                eroded = dilated.Erode(3);
-
-                using (VectorOfVectorOfPoint contours = new VectorOfVectorOfPoint())
-                {
-                    CvInvoke.FindContours(eroded, contours, null, RetrType.List, ChainApproxMethod.ChainApproxSimple);
-
-                    for (int i = 0; i < contours.Size; i++)
-                    {
-                        using (VectorOfPoint contour = contours[i])
-                        {
-                            Rectangle rect = CvInvoke.BoundingRectangle(contour);
-                            if (rect.Width > 50 && rect.Width < 150
-                                         && rect.Height > 80 && rect.Height < 150)
-                            {
-                                lsR.Add(rect);
-                            }
-                        }
-                    }
-                }
-
-                Bitmap tmpBitmap = null;
-                try
-                {
-                    tmpBitmap = src.ToBitmap();
-
-                    for (int i = 0; i < lsR.Count; i++)
-                    {
-                        Bitmap tmp2 = null;
-                        Image<Gray, byte> tmp3 = null;
-
-                        try
-                        {
-                            tmp2 = tmpBitmap.Clone(lsR[i], tmpBitmap.PixelFormat);
-                            tmp3 = tmp2.ToGrayImage();
-
-                            int T = 0;
-                            int T0 = 128;
-                            do
-                            {
-                                T = T0;
-                                int m = 0, M = 0;
-                                int min = 0, max = 0;
-                                for (int y = 0; y < tmp3.Rows; y++)
-                                {
-                                    for (int x = 0; x < tmp3.Cols; x++)
-                                    {
-                                        int value = tmp3.Data[y, x, 0];
-                                        if (value <= T)
-                                        {
-                                            m++;
-                                            min += value;
-                                        }
-                                        else
-                                        {
-                                            M++;
-                                            max += value;
-                                        }
-                                    }
-                                }
-
-                                if (m > 0 && M > 0)
-                                {
-                                    T0 = (min / m + max / M) / 2;
-                                }
-                                else
-                                {
-                                    break;
-                                }
-                            } while (T - T0 > 1 || T0 - T > 1);
-
-                            d += T0 / (double)lsR.Count;
-                        }
-                        finally
-                        {
-                            if (tmp2 != null) tmp2.Dispose();
-                            if (tmp3 != null) tmp3.Dispose();
-                        }
-                    }
-                }
-                finally
-                {
-                    if (tmpBitmap != null) tmpBitmap.Dispose();
-                }
-            }
-            finally
-            {
-                if (grayImage != null) grayImage.Dispose();
-                if (dilated != null) dilated.Dispose();
-                if (eroded != null) eroded.Dispose();
-            }
-
-            return d;
-        }
-
-        private Image<Gray, byte> search(double thr, Image<Gray, byte> grayImage, double min, double max
-   , out List<Rectangle> list_out, out int count, Image<Bgr, byte> color, out Image<Bgr, byte> color_out,
-  Image<Gray, byte> bi, out Image<Gray, byte> bi_out)
-        {
-            List<Rectangle> listR = new List<Rectangle>();
-            List<Rectangle> list_best = new List<Rectangle>();
-            Image<Bgr, byte> color2 = null;
-            Image<Gray, byte> src = null;
-            Image<Gray, byte> bi2 = null;
-            Image<Bgr, byte> color_best = null;
-            Image<Gray, byte> bi_best = null;
-            Image<Gray, byte> src_best = null;
-
-            int c_best = 0;
-
-            try
-            {
-                for (double value = min; value <= max; value += 0.1)
-                {
-                    // Dispose previous iteration objects
-                    if (color2 != null) color2.Dispose();
-                    if (src != null) src.Dispose();
-                    if (bi2 != null) bi2.Dispose();
-
-                    listR.Clear();
-                    int c = 0;
-
-                    double t = thr / value;
-                    src = grayImage.ThresholdBinary(new Gray(t), new Gray(255));
-                    color2 = color.Clone();
-                    bi2 = bi.Clone();
-
-                    using (VectorOfVectorOfPoint contours = new VectorOfVectorOfPoint())
-                    {
-                        CvInvoke.FindContours(src, contours, null, RetrType.List, ChainApproxMethod.ChainApproxSimple);
-
-                        for (int i = 0; i < contours.Size; i++)
-                        {
-                            using (VectorOfPoint contour = contours[i])
-                            {
-                                Rectangle rect = CvInvoke.BoundingRectangle(contour);
-                                CvInvoke.DrawContours(color2, contours, i, new MCvScalar(255, 255, 0), 1);
-
-                                if (rect.Width > 20 && rect.Width < 150
-                                          && rect.Height > 80 && rect.Height < 150)
-                                {
-                                    c++;
-                                    CvInvoke.DrawContours(color2, contours, i, new MCvScalar(0, 255, 255), 3);
-
-                                    color2.Draw(rect, new Bgr(Color.Green), 2);
-                                    CvInvoke.DrawContours(bi2, contours, i, new MCvScalar(255), -1);
-                                    listR.Add(rect);
-                                }
-                            }
-                        }
-
-                        // Remove overlapping rectangles
-                        for (int i = 0; i < c; i++)
-                        {
-                            for (int j = i + 1; j < c; j++)
-                            {
-                                if ((listR[j].X < (listR[i].X + listR[i].Width) && listR[j].X > listR[i].X)
-                           && (listR[j].Y < (listR[i].Y + listR[i].Width) && listR[j].Y > listR[i].Y))
-                                {
-                                    listR.RemoveAt(j);
-                                    c--;
-                                    j--;
-                                }
-                                else if ((listR[i].X < (listR[j].X + listR[j].Width) && listR[i].X > listR[j].X)
-                            && (listR[i].Y < (listR[j].Y + listR[j].Width) && listR[i].Y > listR[j].Y))
-                                {
-                                    listR.RemoveAt(i);
-                                    c--;
-                                    i--;
-                                    break;
-                                }
-                            }
-                        }
-                    }
-
-                    if (c <= 8 && c > c_best)
-                    {
-                        list_best = new List<Rectangle>(listR);
-                        c_best = c;
-
-                        // Dispose old best images
-                        if (color_best != null) color_best.Dispose();
-                        if (bi_best != null) bi_best.Dispose();
-                        if (src_best != null) src_best.Dispose();
-
-                        // Save current as best
-                        color_best = color2;
-                        bi_best = bi2;
-                        src_best = src;
-
-                        // Prevent disposal
-                        color2 = null;
-                        bi2 = null;
-                        src = null;
-
-                        if (c == 8)
-                        {
-                            break;
-                        }
-                    }
-                }
-
-                // Set output values
-                color_out = color_best ?? color.Clone();
-                bi_out = bi_best ?? bi.Clone();
-                list_out = list_best;
-                count = c_best;
-
-                Image<Gray, byte> result = src_best ?? src;
-
-                // Prevent disposal of returned object
-                src_best = null;
-                src = null;
-                color_best = null;
-                bi_best = null;
-
-                return result;
-            }
-            finally
-            {
-                // Cleanup
-                if (color2 != null) color2.Dispose();
-                if (src != null) src.Dispose();
-                if (bi2 != null) bi2.Dispose();
-                if (color_best != null) color_best.Dispose();
-                if (bi_best != null) bi_best.Dispose();
-                if (src_best != null) src_best.Dispose();
-            }
-        }
     }
 }
