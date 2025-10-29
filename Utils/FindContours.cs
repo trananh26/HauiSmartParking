@@ -18,9 +18,15 @@ namespace Auto_parking
         /// <param name="thresholdValue">Value used for thresholding.</param>
         /// <param name="processedGray">Resulting gray image.</param>
         /// <param name="processedColor">Resulting color image.</param>
-        public int IdentifyContours(Bitmap colorImage, int thresholdValue, bool invert, out Bitmap processedGray, out Bitmap processedColor, out List<Rectangle> list)
+        public int IdentifyContours(
+            Bitmap colorImage,
+            int thresholdValue,
+            bool invert,
+            out Bitmap processedGray,
+            out Bitmap processedColor,
+            out List<Rectangle> listRectangles)
         {
-            List<Rectangle> listR = new List<Rectangle>();
+            listRectangles = new List<Rectangle>();
             Image<Gray, byte> grayImage = null;
             Image<Gray, byte> bi = null;
             Image<Bgr, byte> color = null;
@@ -63,7 +69,7 @@ namespace Auto_parking
                         {
                             color2 = colorImage.ToBgrImage();
                             bi2 = bi.Clone();
-                            listR.Clear();
+                            listRectangles.Clear();
                             int c = 0;
                             double t = 127 + value * s;
                             src = grayImage.ThresholdBinary(new Gray(t), new Gray(255));
@@ -92,7 +98,7 @@ namespace Auto_parking
 
                                             color2.Draw(rect, new Bgr(Color.Green), 2);
                                             CvInvoke.DrawContours(bi2, contours, i, new MCvScalar(255), -1);
-                                            listR.Add(rect);
+                                            listRectangles.Add(rect);
                                         }
                                     }
                                 }
@@ -103,21 +109,21 @@ namespace Auto_parking
                             double dis = 0;
                             for (int i = 0; i < c; i++)
                             {
-                                avg_h += listR[i].Height;
+                                avg_h += listRectangles[i].Height;
                                 for (int j = i + 1; j < c; j++)
                                 {
-                                    if ((listR[j].X < (listR[i].X + listR[i].Width) && listR[j].X > listR[i].X)
-                                 && (listR[j].Y < (listR[i].Y + listR[i].Width) && listR[j].Y > listR[i].Y))
+                                    if ((listRectangles[j].X < (listRectangles[i].X + listRectangles[i].Width) && listRectangles[j].X > listRectangles[i].X)
+                                 && (listRectangles[j].Y < (listRectangles[i].Y + listRectangles[i].Width) && listRectangles[j].Y > listRectangles[i].Y))
                                     {
-                                        listR.RemoveAt(j);
+                                        listRectangles.RemoveAt(j);
                                         c--;
                                         j--;
                                     }
-                                    else if ((listR[i].X < (listR[j].X + listR[j].Width) && listR[i].X > listR[j].X)
-                                              && (listR[i].Y < (listR[j].Y + listR[j].Width) && listR[i].Y > listR[j].Y))
+                                    else if ((listRectangles[i].X < (listRectangles[j].X + listRectangles[j].Width) && listRectangles[i].X > listRectangles[j].X)
+                                              && (listRectangles[i].Y < (listRectangles[j].Y + listRectangles[j].Width) && listRectangles[i].Y > listRectangles[j].Y))
                                     {
-                                        avg_h -= listR[i].Height;
-                                        listR.RemoveAt(i);
+                                        avg_h -= listRectangles[i].Height;
+                                        listRectangles.RemoveAt(i);
                                         c--;
                                         i--;
                                         break;
@@ -130,13 +136,13 @@ namespace Auto_parking
                                 avg_h = avg_h / c;
                                 for (int i = 0; i < c; i++)
                                 {
-                                    dis += Math.Abs(avg_h - listR[i].Height);
+                                    dis += Math.Abs(avg_h - listRectangles[i].Height);
                                 }
                             }
 
                             if (c <= 8 && c > 1 && c > c_best && dis <= c * 8)
                             {
-                                listR.CopyTo(li);
+                                listRectangles.CopyTo(li);
                                 c_best = c;
 
                                 // Dispose old best images before replacing
@@ -177,10 +183,10 @@ namespace Auto_parking
                 color_b = null;
                 bi_b = null;
 
-                listR.Clear();
+                listRectangles.Clear();
                 for (int i = 0; i < li.Length; i++)
                 {
-                    if (li[i].Height != 0) listR.Add(li[i]);
+                    if (li[i].Height != 0) listRectangles.Add(li[i]);
                 }
 
                 #endregion
@@ -188,7 +194,6 @@ namespace Auto_parking
                 #region Assigning output
                 processedColor = finalColor.ToBitmap();
                 processedGray = finalGrayImage.ToBitmap();
-                list = listR;
 
                 // Dispose final images after converting to Bitmap
                 finalColor.Dispose();
