@@ -332,17 +332,15 @@ namespace Auto_parking
                     };
                 }
 
-                using (Image<Gray, byte> grayImage = grayframe.ToGrayImage())
-                using (Bitmap processedGray = grayImage.ToBitmap())
                 {
                     FilterAndSortRectangles(
-                        processedGray,
+                        grayframe,
                         rectangles,
                         out List<Rectangle> upRow,
                         out List<Rectangle> downRow);
 
-                    var upText = RecognizeRectangleList(processedGray, upRow, true);
-                    var downText = RecognizeRectangleList(processedGray, downRow, false);
+                    var upText = RecognizeRectangleList(grayframe, upRow, true);
+                    var downText = RecognizeRectangleList(grayframe, downRow, false);
 
                     string fullText = upText.Item1;
                     if (!string.IsNullOrEmpty(downText.Item1))

@@ -11,7 +11,7 @@ namespace Auto_parking
     class FindContours
     {
         public int count = 0;
-        
+
         /// <summary>
         /// Identifies rectangular contours in the specified color image using adaptive thresholding and contour analysis.
         /// </summary>
@@ -40,27 +40,39 @@ namespace Auto_parking
 
             try
             {
-                // Conversion To grayscale
+                // ========== BƯỚC 1: CHUẨN BỊ DỮ LIỆU BAN ĐẦU ==========
+                // Chuyển ảnh màu thành ảnh xám để xử lý dễ dàng hơn
                 grayImage = colorImage.ToGrayImage();
+
+                // Tạo ảnh nhị phân (chỉ có 2 tones: đen/trắng) để lưu kết quả
                 bi = new Image<Gray, byte>(grayImage.Width, grayImage.Height);
+
+                // Tạo ảnh BGR để vẽ contour lên (kết quả hiển thị)
                 color = colorImage.ToBgrImage();
 
-                // tim gia tri thresh de co so ky tu lon nhat
+                // Tính giá trị cường độ trung bình của ảnh xám (tham khảo)
                 double thr = grayImage.GetAverage().Intensity;
                 if (thr == 0)
                 {
-                    thr = 128; // Default fallback
+                    thr = 128; // Fallback mặc định nếu không có giá trị trung bình
                 }
 
+                // Mảng lưu trữ 8 contour hình chữ nhật tốt nhất
                 Rectangle[] li = new Rectangle[9];
+
+                // Khởi tạo các ảnh "tốt nhất" hiện tại
                 color_b = colorImage.ToBgrImage();
                 src_b = grayImage.Clone();
                 bi_b = bi.Clone();
 
                 int c_best = 0;
 
+                // ========== BƯỚC 2: VÒNG LẶP THỬ NHIỀU NGƯỠNG KHÁC NHAU ==========
+                // Thử các giá trị ngưỡng: 126, 128, 130, 131, 133, 134, ...
+                // Mục đích: tìm ngưỡng cho phát hiện biển số chính xác nhất
                 for (double value = 0; value <= 127; value += 3)
                 {
+                    // Hệ số s điều chỉnh: -1 (126, 131, ...) hoặc +1 (128, 130, ...)
                     for (int s = -1; s <= 1 && s + value != 1; s += 2)
                     {
                         Image<Bgr, byte> color2 = null;
@@ -69,14 +81,21 @@ namespace Auto_parking
 
                         try
                         {
+                            // Tạo các ảnh tạm thời để thử ngưỡng hiện tại
                             color2 = colorImage.ToBgrImage();
                             bi2 = bi.Clone();
                             listRectangles.Clear();
                             int c = 0;
+
+                            // Tính ngưỡng thực tế: t = 127 + value * s
                             double t = 127 + value * s;
+
+                            // ========== BƯỚC 3: NHỊ PHÂN HÓA VÀ TÌM CONTOUR ==========
+                            // Chuyển ảnh xám thành nhị phân dựa trên ngưỡng t
+                            // Pixel > t → trắng (255), pixel <= t → đen (0)
                             src = grayImage.ThresholdBinary(new Gray(t), new Gray(255));
 
-                            // Use FindContours with Emgu.CV 3.x API
+                            // Tìm tất cả contour (đường viền) trong ảnh nhị phân
                             using (VectorOfVectorOfPoint contours = new VectorOfVectorOfPoint())
                             {
                                 CvInvoke.FindContours(src, contours, null, RetrType.List, ChainApproxMethod.ChainApproxSimple);
@@ -85,28 +104,45 @@ namespace Auto_parking
                                 {
                                     using (VectorOfPoint contour = contours[i])
                                     {
+                                        // Lấy hình chữ nhật bao quanh contour
                                         Rectangle rect = CvInvoke.BoundingRectangle(contour);
 
-                                        // Draw contours
+                                        // Vẽ tất cả contour bằng màu vàng (255, 255, 0)
                                         CvInvoke.DrawContours(color2, contours, i, new MCvScalar(255, 255, 0), 1);
 
+                                        // ========== BƯỚC 4: LỌC CONTOUR HỢP LỆ (BIỂN SỐ) ==========
+                                        // Tính tỷ lệ chiều rộng/chiều cao
                                         double ratio = (double)rect.Width / rect.Height;
+
+                                        // Kiểm tra các tiêu chí của biển số xe:
+                                        // - Chiều rộng: 20-150 pixel
+                                        // - Chiều cao: 80-180 pixel
+                                        // - Tỷ lệ w/h: 0.1-1.1 (tránh quá hẹp/quá rộng)
+                                        // - Vị trí X: > 20 pixel (tránh lề trái)
                                         if (rect.Width > 20 && rect.Width < 150
                                             && rect.Height > 80 && rect.Height < 180
                                             && ratio > 0.1 && ratio < 1.1 && rect.X > 20)
                                         {
                                             c++;
+
+                                            // Vẽ contour hợp lệ bằng màu cyan (0, 255, 255) - đậm hơn
                                             CvInvoke.DrawContours(color2, contours, i, new MCvScalar(0, 255, 255), 3);
 
+                                            // Vẽ hình chữ nhật màu xanh lá
                                             color2.Draw(rect, new Bgr(Color.Green), 2);
+
+                                            // Tô kín contour trong ảnh nhị phân (màu trắng)
                                             CvInvoke.DrawContours(bi2, contours, i, new MCvScalar(255), -1);
+
+                                            // Thêm vào danh sách hình chữ nhật
                                             listRectangles.Add(rect);
                                         }
                                     }
                                 }
                             }
 
-                            // Remove overlapping rectangles
+                            // ========== BƯỚC 5: LOẠI BỎ CONTOUR CHỒNG LẬP ==========
+                            // Kiểm tra và xóa những hình chữ nhật trùng nhau
                             double avg_h = 0;
                             double dis = 0;
                             for (int i = 0; i < c; i++)
@@ -114,6 +150,7 @@ namespace Auto_parking
                                 avg_h += listRectangles[i].Height;
                                 for (int j = i + 1; j < c; j++)
                                 {
+                                    // Kiểm tra nếu hình chữ nhật j chồng với hình i
                                     if ((listRectangles[j].X < (listRectangles[i].X + listRectangles[i].Width) && listRectangles[j].X > listRectangles[i].X)
                                  && (listRectangles[j].Y < (listRectangles[i].Y + listRectangles[i].Width) && listRectangles[j].Y > listRectangles[i].Y))
                                     {
@@ -121,6 +158,7 @@ namespace Auto_parking
                                         c--;
                                         j--;
                                     }
+                                    // Kiểm tra nếu hình chữ nhật i chồng với hình j
                                     else if ((listRectangles[i].X < (listRectangles[j].X + listRectangles[j].Width) && listRectangles[i].X > listRectangles[j].X)
                                               && (listRectangles[i].Y < (listRectangles[j].Y + listRectangles[j].Width) && listRectangles[i].Y > listRectangles[j].Y))
                                     {
@@ -133,30 +171,43 @@ namespace Auto_parking
                                 }
                             }
 
+                            // ========== BƯỚC 6: TÍNH ĐỘ ĐỀU ĐẶN CHIỀU CAO ==========
+                            // Tính chiều cao trung bình của các biển số
                             if (c > 0)
                             {
                                 avg_h = avg_h / c;
+
+                                // Tính tổng độ lệch chiều cao (độ đều đặn)
+                                // Nếu dis nhỏ → chiều cao đều đặn (tốt)
                                 for (int i = 0; i < c; i++)
                                 {
                                     dis += Math.Abs(avg_h - listRectangles[i].Height);
                                 }
                             }
 
+                            // ========== BƯỚC 7: LƯU KẾT QUẢ TỐT NHẤT ==========
+                            // Kiểm tra nếu kết quả hiện tại tốt hơn kết quả trước đó
+                            // Điều kiện:
+                            // - Số biển số: 2-8 (c <= 8 && c > 1)
+                            // - Nhiều hơn kết quả trước (c > c_best)
+                            // - Chiều cao đều đặn (dis <= c * 8)
                             if (c <= 8 && c > 1 && c > c_best && dis <= c * 8)
                             {
+                                // Sao chép danh sách hình chữ nhật tốt nhất
                                 listRectangles.CopyTo(li);
                                 c_best = c;
 
-                                // Dispose old best images before replacing
+                                // Giải phóng các ảnh "tốt nhất" cũ
                                 if (color_b != null) color_b.Dispose();
                                 if (bi_b != null) bi_b.Dispose();
                                 if (src_b != null) src_b.Dispose();
 
+                                // Lưu ảnh hiện tại làm ảnh "tốt nhất"
                                 color_b = color2;
                                 bi_b = bi2;
                                 src_b = src;
 
-                                // Set to null to prevent disposal in finally block
+                                // Đặt thành null để không bị xóa trong finally block
                                 color2 = null;
                                 bi2 = null;
                                 src = null;
@@ -164,45 +215,48 @@ namespace Auto_parking
                         }
                         finally
                         {
-                            // Dispose temporary images if not saved as best
+                            // Giải phóng ảnh tạm thời (nếu không được lưu làm tốt nhất)
                             if (color2 != null) color2.Dispose();
                             if (bi2 != null) bi2.Dispose();
                             if (src != null) src.Dispose();
                         }
                     }
+                    // Dừng nếu đã tìm được đủ 8 biển số
                     if (c_best == 8) break;
                 }
 
                 count = c_best;
 
-                // Transfer ownership to output images
+                // ========== BƯỚC 8: TRẢ KẾT QUẢ ==========
+                // Chuyển các ảnh "tốt nhất" sang output
                 Image<Gray, byte> finalGrayImage = src_b;
                 Image<Bgr, byte> finalColor = color_b;
                 Image<Gray, byte> finalBi = bi_b;
 
-                // Prevent disposal of transferred images
+                // Ngăn chặn các ảnh này bị xóa trong finally block bên dưới
                 src_b = null;
                 color_b = null;
                 bi_b = null;
 
+                // Tạo danh sách hình chữ nhật cuối cùng (loại bỏ những hình rỗng)
                 listRectangles.Clear();
                 for (int i = 0; i < li.Length; i++)
                 {
                     if (li[i].Height != 0) listRectangles.Add(li[i]);
                 }
 
-                // Assigning output
+                // Chuyển các ảnh Emgu.CV sang Bitmap để trả về
                 processedColor = finalColor.ToBitmap();
                 processedGray = finalGrayImage.ToBitmap();
 
-                // Dispose final images after converting to Bitmap
+                // Giải phóng các ảnh Emgu.CV sau khi chuyển đổi
                 finalColor.Dispose();
                 finalGrayImage.Dispose();
                 finalBi.Dispose();
             }
             finally
             {
-                // Cleanup all remaining images
+                // Dọn dẹp tất cả các ảnh Emgu.CV còn lại chưa được giải phóng
                 if (grayImage != null) grayImage.Dispose();
                 if (bi != null) bi.Dispose();
                 if (color != null) color.Dispose();
