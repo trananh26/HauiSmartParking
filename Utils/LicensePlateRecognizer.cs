@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Windows.Forms;
 using Tesseract;
 
 namespace Auto_parking
@@ -339,12 +340,12 @@ namespace Auto_parking
                         out List<Rectangle> upRow,
                         out List<Rectangle> downRow);
 
-                    string upText = RecognizeRectangleList(processedGray, upRow, true);
-                    string downText = RecognizeRectangleList(processedGray, downRow, false);
+                    var upText = RecognizeRectangleList(processedGray, upRow, true);
+                    var downText = RecognizeRectangleList(processedGray, downRow, false);
 
-                    string fullText = upText;
-                    if (!string.IsNullOrEmpty(downText))
-                        fullText += "\r\n" + downText;
+                    string fullText = upText.Item1;
+                    if (!string.IsNullOrEmpty(downText.Item1))
+                        fullText += "\r\n" + downText.Item1;
 
                     return new RecognitionResult
                     {
@@ -355,7 +356,8 @@ namespace Auto_parking
                         GrayImage = (Bitmap)grayframe.Clone(),
                         ColorImage = (Bitmap)colorframe.Clone(),
                         UpperCharacters = upRow,
-                        LowerCharacters = downRow
+                        LowerCharacters = downRow,
+                        CharImages = upText.Item2.Concat(downText.Item2).ToList()
                     };
                 }
             }
@@ -464,20 +466,23 @@ namespace Auto_parking
             return false;
         }
 
-        private string RecognizeRectangleList(Bitmap grayframe, List<Rectangle> rects, bool isUpperRow)
+        private (string, List<Bitmap>) RecognizeRectangleList(Bitmap grayframe, List<Rectangle> rects, bool isUpperRow)
         {
             string result = "";
+            List<Bitmap> charImages = new List<Bitmap>();
 
             for (int i = 0; i < rects.Count; i++)
             {
                 using (Bitmap charImage = grayframe.Clone(rects[i], grayframe.PixelFormat))
                 {
+                    charImages.Add((Bitmap)charImage.Clone());
+
                     string character = RecognizeCharacter(charImage, isUpperRow, i);
                     result += character;
                 }
             }
 
-            return result;
+            return (result, charImages);
         }
 
         private string RecognizeCharacter(Bitmap charImage, bool isUpperRow, int position)

@@ -511,52 +511,30 @@ namespace Auto_parking
         {
             if (frmImage == null) return;
 
-            // Tạo mảng box local
-            PictureBox[] box = new PictureBox[12];
-            for (int i = 0; i < box.Length; i++)
-            {
-                box[i] = new PictureBox();
-            }
-
             int boxIndex = 0;
             int x = 12;
 
-            if (result.UpperCharacters != null && result.GrayImage != null)
-            {
-                foreach (Rectangle rect in result.UpperCharacters)
-                {
-                    if (boxIndex >= box.Length) break;
+            var foobar = new List<PictureBox>();
+            foobar.Add(frmImage.pictureBox5);
+            foobar.Add(frmImage.pictureBox6);
+            foobar.Add(frmImage.pictureBox7);
+            foobar.Add(frmImage.pictureBox8);
+            foobar.Add(frmImage.pictureBox9);
+            foobar.Add(frmImage.pictureBox10);
+            foobar.Add(frmImage.pictureBox11);
+            foobar.Add(frmImage.pictureBox12);
 
-                    using (Bitmap charImg = result.GrayImage.Clone(rect, result.GrayImage.PixelFormat))
-                    {
-                        box[boxIndex].Location = new Point(x + boxIndex * 50, 290);
-                        box[boxIndex].Size = new Size(50, 100);
-                        box[boxIndex].SizeMode = PictureBoxSizeMode.StretchImage;
-                        box[boxIndex].Image = new Bitmap(charImg);
-                        frmImage.Controls.Add(box[boxIndex]);
-                        boxIndex++;
-                    }
-                }
+
+            foreach (var rect in result.CharImages)
+            {
+                if (boxIndex >= foobar.Count) break;
+                foobar[boxIndex].Image = rect;
+                boxIndex++;
             }
 
-            if (result.LowerCharacters != null && result.GrayImage != null)
-            {
-                int startIndex = boxIndex;
-                foreach (Rectangle rect in result.LowerCharacters)
-                {
-                    if (boxIndex >= box.Length) break;
-
-                    using (Bitmap charImg = result.GrayImage.Clone(rect, result.GrayImage.PixelFormat))
-                    {
-                        int localIndex = boxIndex - startIndex;
-                        box[boxIndex].Location = new Point(x + localIndex * 50, 390);
-                        box[boxIndex].Size = new Size(50, 100);
-                        box[boxIndex].SizeMode = PictureBoxSizeMode.StretchImage;
-                        box[boxIndex].Image = new Bitmap(charImg);
-                        frmImage.Controls.Add(box[boxIndex]);
-                        boxIndex++;
-                    }
-                }
+            while (boxIndex < foobar.Count) {
+                foobar[boxIndex].Image = null;
+                boxIndex++;
             }
         }
 

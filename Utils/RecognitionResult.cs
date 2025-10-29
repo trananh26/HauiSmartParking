@@ -23,6 +23,8 @@ namespace Auto_parking
         public List<Rectangle> UpperCharacters { get; set; }
         public List<Rectangle> LowerCharacters { get; set; }
 
+        public List<Bitmap> CharImages { get; set; }
+
         #endregion
 
         #region Methods
