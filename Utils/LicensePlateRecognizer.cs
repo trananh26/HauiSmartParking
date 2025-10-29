@@ -6,7 +6,6 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Windows.Forms;
 using Tesseract;
 
 namespace Auto_parking
@@ -332,33 +331,31 @@ namespace Auto_parking
                     };
                 }
 
+                FilterAndSortRectangles(
+                    grayframe,
+                    rectangles,
+                    out List<Rectangle> upRow,
+                    out List<Rectangle> downRow);
+
+                (string, List<Bitmap>) upText = RecognizeRectangleList(grayframe, upRow, true);
+                (string, List<Bitmap>) downText = RecognizeRectangleList(grayframe, downRow, false);
+
+                string fullText = upText.Item1;
+                if (!string.IsNullOrEmpty(downText.Item1))
+                    fullText += "\r\n" + downText.Item1;
+
+                return new RecognitionResult
                 {
-                    FilterAndSortRectangles(
-                        grayframe,
-                        rectangles,
-                        out List<Rectangle> upRow,
-                        out List<Rectangle> downRow);
-
-                    var upText = RecognizeRectangleList(grayframe, upRow, true);
-                    var downText = RecognizeRectangleList(grayframe, downRow, false);
-
-                    string fullText = upText.Item1;
-                    if (!string.IsNullOrEmpty(downText.Item1))
-                        fullText += "\r\n" + downText.Item1;
-
-                    return new RecognitionResult
-                    {
-                        Success = true,
-                        PlateNumber = fullText.Replace("\n", "").Replace("\r", ""),
-                        FormattedText = fullText,
-                        PlateImage = (Bitmap)plateImage.Clone(),
-                        GrayImage = (Bitmap)grayframe.Clone(),
-                        ColorImage = (Bitmap)colorframe.Clone(),
-                        UpperCharacters = upRow,
-                        LowerCharacters = downRow,
-                        CharImages = upText.Item2.Concat(downText.Item2).ToList()
-                    };
-                }
+                    Success = true,
+                    PlateNumber = fullText.Replace("\n", "").Replace("\r", ""),
+                    FormattedText = fullText,
+                    PlateImage = (Bitmap)plateImage.Clone(),
+                    GrayImage = (Bitmap)grayframe.Clone(),
+                    ColorImage = (Bitmap)colorframe.Clone(),
+                    UpperCharacters = upRow,
+                    LowerCharacters = downRow,
+                    CharImages = upText.Item2.Concat(downText.Item2).ToList()
+                };
             }
             finally
             {
