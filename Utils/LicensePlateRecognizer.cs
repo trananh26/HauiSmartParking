@@ -18,6 +18,7 @@ namespace Auto_parking
         private readonly string _tesseractDataPath;
         private readonly string _cascadePath;
         private const string LANG = "eng";
+        private const int GRAYSCALE_THRESHOLD_VALUE = 44;
 
         private TesseractEngine _fullTesseract;
         private TesseractEngine _chTesseract;
@@ -314,7 +315,7 @@ namespace Auto_parking
 
             int count = con.IdentifyContours(
                                 plateImage,
-                                50,
+                                GRAYSCALE_THRESHOLD_VALUE,
                                 false,
                                 out Bitmap grayframe,
                                 out Bitmap colorframe,
