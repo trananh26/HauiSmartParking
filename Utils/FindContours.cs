@@ -50,13 +50,6 @@ namespace Auto_parking
                 // Tạo ảnh BGR để vẽ contour lên (kết quả hiển thị)
                 color = colorImage.ToBgrImage();
 
-                // Tính giá trị cường độ trung bình của ảnh xám (tham khảo)
-                double thr = grayImage.GetAverage().Intensity;
-                if (thr == 0)
-                {
-                    thr = 128; // Fallback mặc định nếu không có giá trị trung bình
-                }
-
                 // Mảng lưu trữ 8 contour hình chữ nhật tốt nhất
                 Rectangle[] li = new Rectangle[9];
 
@@ -67,7 +60,7 @@ namespace Auto_parking
 
                 int c_best = 0;
 
-                // ========== BƯỚC 2: VÒNG LẶP THỬ NHIỀU NGƯỠNG KHÁC NHAU ==========
+                // ========== BƯỚC 2: VÒNG LẶP THỬ NHIỀU NGƯỎNG KHÁC NHAU ==========
                 // Thử các giá trị ngưỡng: 126, 128, 130, 131, 133, 134, ...
                 // Mục đích: tìm ngưỡng cho phát hiện biển số chính xác nhất
                 for (double value = 0; value <= 127; value += 3)
@@ -228,16 +221,6 @@ namespace Auto_parking
                 count = c_best;
 
                 // ========== BƯỚC 8: TRẢ KẾT QUẢ ==========
-                // Chuyển các ảnh "tốt nhất" sang output
-                Image<Gray, byte> finalGrayImage = src_b;
-                Image<Bgr, byte> finalColor = color_b;
-                Image<Gray, byte> finalBi = bi_b;
-
-                // Ngăn chặn các ảnh này bị xóa trong finally block bên dưới
-                src_b = null;
-                color_b = null;
-                bi_b = null;
-
                 // Tạo danh sách hình chữ nhật cuối cùng (loại bỏ những hình rỗng)
                 listRectangles.Clear();
                 for (int i = 0; i < li.Length; i++)
@@ -246,13 +229,18 @@ namespace Auto_parking
                 }
 
                 // Chuyển các ảnh Emgu.CV sang Bitmap để trả về
-                processedColor = finalColor.ToBitmap();
-                processedGray = finalGrayImage.ToBitmap();
+                processedColor = color_b.ToBitmap();
+                processedGray = src_b.ToBitmap();
 
                 // Giải phóng các ảnh Emgu.CV sau khi chuyển đổi
-                finalColor.Dispose();
-                finalGrayImage.Dispose();
-                finalBi.Dispose();
+                color_b.Dispose();
+                src_b.Dispose();
+                bi_b.Dispose();
+
+                // Đặt thành null để tránh giải phóng hai lần trong finally
+                color_b = null;
+                src_b = null;
+                bi_b = null;
             }
             finally
             {
