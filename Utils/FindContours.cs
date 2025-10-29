@@ -111,9 +111,13 @@ namespace Auto_parking
                                         // - Chiều cao: 80-180 pixel
                                         // - Tỷ lệ w/h: 0.1-1.1 (tránh quá hẹp/quá rộng)
                                         // - Vị trí X: > 20 pixel (tránh lề trái)
-                                        if (rect.Width > 20 && rect.Width < 150
-                                                && rect.Height > 80 && rect.Height < 180
-                                      && ratio > 0.1 && ratio < 1.1 && rect.X > 20)
+                                        if (rect.Width > 20
+                                            && rect.Width < 150
+                                            && rect.Height > 80
+                                            && rect.Height < 180
+                                            && ratio > 0.1
+                                            && ratio < 1.1
+                                            && rect.X > 20)
                                         {
                                             currentContourCount++;
 
@@ -143,16 +147,20 @@ namespace Auto_parking
                                 for (int j = i + 1; j < currentContourCount; j++)
                                 {
                                     // Kiểm tra nếu hình chữ nhật j chồng với hình i
-                                    if ((listRectangles[j].X < (listRectangles[i].X + listRectangles[i].Width) && listRectangles[j].X > listRectangles[i].X)
-                              && (listRectangles[j].Y < (listRectangles[i].Y + listRectangles[i].Width) && listRectangles[j].Y > listRectangles[i].Y))
+                                    if (listRectangles[j].X < (listRectangles[i].X + listRectangles[i].Width)
+                                        && listRectangles[j].X > listRectangles[i].X
+                                        && listRectangles[j].Y < (listRectangles[i].Y + listRectangles[i].Width)
+                                        && listRectangles[j].Y > listRectangles[i].Y)
                                     {
                                         listRectangles.RemoveAt(j);
                                         currentContourCount--;
                                         j--;
                                     }
                                     // Kiểm tra nếu hình chữ nhật i chồng với hình j
-                                    else if ((listRectangles[i].X < (listRectangles[j].X + listRectangles[j].Width) && listRectangles[i].X > listRectangles[j].X)
-                                       && (listRectangles[i].Y < (listRectangles[j].Y + listRectangles[j].Width) && listRectangles[i].Y > listRectangles[j].Y))
+                                    else if (listRectangles[i].X < (listRectangles[j].X + listRectangles[j].Width)
+                                        && listRectangles[i].X > listRectangles[j].X
+                                        && listRectangles[i].Y < (listRectangles[j].Y + listRectangles[j].Width)
+                                        && listRectangles[i].Y > listRectangles[j].Y)
                                     {
                                         averageHeight -= listRectangles[i].Height;
                                         listRectangles.RemoveAt(i);
@@ -183,7 +191,10 @@ namespace Auto_parking
                             // - Số biển số: 2-8 (currentContourCount <= 8 && currentContourCount > 1)
                             // - Nhiều hơn kết quả trước (currentContourCount > bestContourCount)
                             // - Chiều cao đều đặn (heightDeviation <= currentContourCount * 8)
-                            if (currentContourCount <= 8 && currentContourCount > 1 && currentContourCount > bestContourCount && heightDeviation <= currentContourCount * 8)
+                            if (currentContourCount <= 8
+                                && currentContourCount > 1
+                                && currentContourCount > bestContourCount
+                                && heightDeviation <= currentContourCount * 8)
                             {
                                 // Sao chép danh sách hình chữ nhật tốt nhất
                                 listRectangles.CopyTo(bestRectangles);
