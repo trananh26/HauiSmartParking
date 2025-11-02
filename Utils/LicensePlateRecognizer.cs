@@ -18,6 +18,7 @@ namespace Auto_parking
         private readonly string _cascadePath;
         private const string LANG = "eng";
         private const int GRAYSCALE_THRESHOLD_VALUE = 44;
+        private const int MAX_IMAGE_DIMENSION = 1280;
 
         private TesseractEngine _fullTesseract;
         private TesseractEngine _chTesseract;
@@ -151,13 +152,14 @@ namespace Auto_parking
 
         private Image<Bgr, byte> FindLicensePlateRegion(Bitmap image)
         {
+            using (Bitmap processedImage = DownscaleImageIfNeeded(image))
             using (CascadeClassifier cascade = new CascadeClassifier(_cascadePath))
             {
                 for (float angle = 0; angle <= 20; angle += 3)
                 {
                     for (float sign = -1; sign <= 1 && sign + angle != 1; sign += 2)
                     {
-                        Image<Bgr, byte> plateRegion = DetectPlateAtAngle(image, cascade, angle * sign);
+                        Image<Bgr, byte> plateRegion = DetectPlateAtAngle(processedImage, cascade, angle * sign);
                         if (plateRegion != null)
                             return plateRegion;
                     }
@@ -165,6 +167,28 @@ namespace Auto_parking
             }
 
             return null;
+        }
+
+        private Bitmap DownscaleImageIfNeeded(Bitmap image)
+        {
+            if (image.Width <= MAX_IMAGE_DIMENSION && image.Height <= MAX_IMAGE_DIMENSION)
+                return new Bitmap(image);
+
+            float scale = Math.Min(
+                (float)MAX_IMAGE_DIMENSION / image.Width,
+                (float)MAX_IMAGE_DIMENSION / image.Height);
+
+            int newWidth = (int)(image.Width * scale);
+            int newHeight = (int)(image.Height * scale);
+
+            Bitmap downscaled = new Bitmap(newWidth, newHeight);
+            using (Graphics g = Graphics.FromImage(downscaled))
+            {
+                g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.HighQualityBicubic;
+                g.DrawImage(image, 0, 0, newWidth, newHeight);
+            }
+
+            return downscaled;
         }
 
         private Image<Bgr, byte> DetectPlateAtAngle(Bitmap image, CascadeClassifier cascade, float angle)
