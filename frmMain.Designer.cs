@@ -150,7 +150,6 @@ namespace Auto_parking
             this.picInputCam.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.picInputCam.TabIndex = 6;
             this.picInputCam.TabStop = false;
-            this.picInputCam.Click += new System.EventHandler(this.picInputCam_Click);
             // 
             // pic_BiensoVao1
             // 
@@ -307,7 +306,6 @@ namespace Auto_parking
             this.pic_BiensoRa1.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
             this.pic_BiensoRa1.TabIndex = 56;
             this.pic_BiensoRa1.TabStop = false;
-            this.pic_BiensoRa1.Click += new System.EventHandler(this.pic_BiensoRa1_Click);
             // 
             // txt_BiensoRa
             // 
@@ -721,7 +719,6 @@ namespace Auto_parking
             this.btnHistory.TabIndex = 78;
             this.btnHistory.Text = "Lịch sử";
             this.btnHistory.UseVisualStyleBackColor = true;
-            this.btnHistory.Click += new System.EventHandler(this.btnHistory_Click);
             // 
             // timercheckin
             // 
@@ -748,7 +745,6 @@ namespace Auto_parking
             this.AutoScroll = true;
             this.BackColor = System.Drawing.Color.FromArgb(((int)(((byte)(224)))), ((int)(((byte)(224)))), ((int)(((byte)(224)))));
             this.ClientSize = new System.Drawing.Size(1421, 769);
-            this.Controls.Add(this.btnHistory);
             this.Controls.Add(this.lblOutputTime);
             this.Controls.Add(this.label15);
             this.Controls.Add(this.lblInputTime);

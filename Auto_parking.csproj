@@ -107,7 +107,6 @@
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
     <Compile Include="Utils\RecognitionResult.cs" />
-    <Compile Include="Utils\WEBCAM.cs" />
     <Compile Include="Utils\XINIFILE.cs" />
     <EmbeddedResource Include="frmCarSystem.resx">
       <DependentUpon>frmCarSystem.cs</DependentUpon>

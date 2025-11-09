@@ -15,12 +15,11 @@ namespace Auto_parking
     {
         #region Private Fields 
 
-        delegate void SetTextCallback(string text);
+        private string m_path = Application.StartupPath + @"\data\";
         private clsCommon cls = new clsCommon();
         private frmImage frmImage;
         private string o_Sensor;
         private bool IsFire;
-        delegate void MyDelegate();
 
         // Reuse buffer để tránh tạo mảng mới liên tục
         private readonly object _serialLock = new object();
@@ -37,7 +36,6 @@ namespace Auto_parking
 
         // Cache paths
         private readonly string m_tesseractDataPath;
-        private const string m_lang = "eng";
 
         private LicensePlateRecognizer _plateRecognizer;
 
@@ -308,13 +306,6 @@ namespace Auto_parking
             }
         }
 
-        #region định nghĩa
-
-        List<Rectangle> listRect = new List<Rectangle>();
-        private string m_path = Application.StartupPath + @"\data\";
-
-        #endregion
-
         #region di chuyển
         bool mouseDown = false;
         Point lastLocation;
@@ -512,7 +503,6 @@ namespace Auto_parking
             if (frmImage == null) return;
 
             int boxIndex = 0;
-            int x = 12;
 
             var foobar = new List<PictureBox>();
             foobar.Add(frmImage.pictureBox5);
@@ -806,10 +796,6 @@ namespace Auto_parking
                 }
             }
         }
-
-        private void picInputCam_Click(object sender, EventArgs e) { }
-        private void pic_BiensoRa1_Click(object sender, EventArgs e) { }
-        private void btnHistory_Click(object sender, EventArgs e) { }
 
         private void MainForm_FormClosing(object sender, FormClosingEventArgs e)
         {
