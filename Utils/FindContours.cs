@@ -116,8 +116,7 @@ namespace Auto_parking
                                             && rect.Height > 80
                                             && rect.Height < 180
                                             && ratio > 0.1
-                                            && ratio < 1.1
-                                            && rect.X > 20)
+                                            && ratio < 1.1)
                                         {
                                             currentContourCount++;
 
