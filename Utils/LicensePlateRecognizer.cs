@@ -563,20 +563,76 @@ namespace Auto_parking
             {
                 using (Bitmap charImage = grayframe.Clone(rects[i], grayframe.PixelFormat))
                 {
-                    // Add 5px white padding around character image
-                    using (Bitmap paddedImage = AddPaddingToCharacterImage(charImage, 5))
+                    // Enhance character clarity before padding
+                    using (Bitmap enhancedImage = EnhanceCharacterClarity(charImage))
                     {
-                        charImages.Add((Bitmap)paddedImage.Clone());
+                        // Add 5px white padding around character image
+                        using (Bitmap paddedImage = AddPaddingToCharacterImage(enhancedImage, 5))
+                        {
+                            charImages.Add((Bitmap)paddedImage.Clone());
 
-                        // Determine OCR engine based on position and row type
-                        bool useNumericEngine = ShouldUseNumericEngine(isUpperRow, i);
-                        string character = Ocr(paddedImage, useNumericEngine);
-                        result += character;
+                            // Determine OCR engine based on position and row type
+                            bool useNumericEngine = ShouldUseNumericEngine(isUpperRow, i);
+                            string character = Ocr(paddedImage, useNumericEngine);
+                            result += character;
+                        }
                     }
                 }
             }
 
             return (result, charImages);
+        }
+
+        private Bitmap EnhanceCharacterClarity(Bitmap sourceImage)
+        {
+            if (sourceImage == null)
+                return null;
+
+            using (Image<Gray, byte> grayImage = sourceImage.ToGrayImage())
+            {
+                // Apply histogram equalization for better contrast
+                using (Mat srcMat = grayImage.Mat)
+                using (Mat dstMat = new Mat())
+                {
+                    CvInvoke.EqualizeHist(srcMat, dstMat);
+                    Image<Gray, byte> enhancedImage = dstMat.ToImage<Gray, byte>();
+
+                    // Apply bilateral filter to reduce noise while preserving edges
+                    Image<Gray, byte> filtered = enhancedImage.SmoothBilateral(9, 75, 75);
+                    enhancedImage.Dispose();
+
+                    // Apply unsharp masking for sharpening
+                    Image<Gray, byte> sharpened = ApplyUnsharpMask(filtered, 1.5);
+                    filtered.Dispose();
+
+                    // Convert back to bitmap
+                    Bitmap result = sharpened.ToBitmap();
+                    sharpened.Dispose();
+                    return result;
+                }
+            }
+        }
+
+        private Image<Gray, byte> ApplyUnsharpMask(Image<Gray, byte> source, double strength)
+        {
+            using (Image<Gray, byte> blurred = source.SmoothGaussian(5))
+            {
+                Image<Gray, byte> result = new Image<Gray, byte>(source.Size);
+
+                using (Mat srcMat = source.Mat)
+                using (Mat blurMat = blurred.Mat)
+                using (Mat resultMat = result.Mat)
+                {
+                    // Unsharp mask: result = source + strength * (source - blurred)
+                    Mat diff = new Mat();
+                    CvInvoke.Subtract(srcMat, blurMat, diff);
+                    CvInvoke.ConvertScaleAbs(diff, diff, strength, 0);
+                    CvInvoke.Add(srcMat, diff, resultMat);
+                    diff.Dispose();
+                }
+
+                return result;
+            }
         }
 
         private Bitmap AddPaddingToCharacterImage(Bitmap sourceImage, int padding)
