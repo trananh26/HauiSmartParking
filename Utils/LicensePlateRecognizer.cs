@@ -129,7 +129,10 @@ namespace Auto_parking
                         };
                     }
 
-                    using (Image<Bgr, byte> resized = plateRegion.Resize(400, 400, Inter.Linear))
+                    // Calculate optimal resize dimensions based on Vietnamese plate standards
+                    (int width, int height) = CalculateOptimalResizeDimensions(plateRegion.Width, plateRegion.Height);
+                    
+                    using (Image<Bgr, byte> resized = plateRegion.Resize(width, height, Inter.Linear))
                     using (Bitmap plateBitmap = resized.ToBitmap())
                     {
                         return ExtractAndRecognizeCharacters(plateBitmap);
@@ -149,6 +152,56 @@ namespace Auto_parking
         #endregion
 
         #region Private Methods - Plate Detection
+
+        private (int, int) CalculateOptimalResizeDimensions(int currentWidth, int currentHeight)
+        {
+            // Vietnamese license plate standard ratios
+            double[] standardRatios = new double[]
+            {
+                330.0 / 165.0,    // 2.0
+                520.0 / 110.0,    // 4.727
+                190.0 / 140.0,    // 1.357
+                280.0 / 200.0,    // 1.4
+                470.0 / 110.0     // 4.273
+            };
+
+            // Standard dimensions for each ratio (width x height)
+            (int, int)[] standardDimensions = new (int, int)[]
+            {
+                (660, 330),       // Ratio 2.0
+                (520, 110),       // Ratio 4.727
+                (190, 140),       // Ratio 1.357
+                (280, 200),       // Ratio 1.4
+                (470, 110)        // Ratio 4.273
+            };
+
+            double actualRatio = (double)currentWidth / currentHeight;
+            double minDifference = double.MaxValue;
+            int bestMatchIndex = 0;
+
+            // Find the closest matching standard ratio
+            for (int i = 0; i < standardRatios.Length; i++)
+            {
+                double difference = Math.Abs(actualRatio - standardRatios[i]);
+                if (difference < minDifference)
+                {
+                    minDifference = difference;
+                    bestMatchIndex = i;
+                }
+            }
+
+            // Get the matching standard dimension
+            (int stdWidth, int stdHeight) = standardDimensions[bestMatchIndex];
+
+            // Ensure minimum edge is 400 pixels for optimal OCR
+            double minStdDimension = Math.Min(stdWidth, stdHeight);
+            double scale = 400.0 / minStdDimension;
+            
+            int targetWidth = (int)(stdWidth * scale);
+            int targetHeight = (int)(stdHeight * scale);
+
+            return (targetWidth, targetHeight);
+        }
 
         private Image<Bgr, byte> FindLicensePlateRegion(Bitmap image)
         {
