@@ -563,16 +563,43 @@ namespace Auto_parking
             {
                 using (Bitmap charImage = grayframe.Clone(rects[i], grayframe.PixelFormat))
                 {
-                    charImages.Add((Bitmap)charImage.Clone());
+                    // Add 5px white padding around character image
+                    using (Bitmap paddedImage = AddPaddingToCharacterImage(charImage, 5))
+                    {
+                        charImages.Add((Bitmap)paddedImage.Clone());
 
-                    // Determine OCR engine based on position and row type
-                    bool useNumericEngine = ShouldUseNumericEngine(isUpperRow, i);
-                    string character = Ocr(charImage, useNumericEngine);
-                    result += character;
+                        // Determine OCR engine based on position and row type
+                        bool useNumericEngine = ShouldUseNumericEngine(isUpperRow, i);
+                        string character = Ocr(paddedImage, useNumericEngine);
+                        result += character;
+                    }
                 }
             }
 
             return (result, charImages);
+        }
+
+        private Bitmap AddPaddingToCharacterImage(Bitmap sourceImage, int padding)
+        {
+            if (sourceImage == null)
+                return null;
+
+            int newWidth = sourceImage.Width + (padding * 2);
+            int newHeight = sourceImage.Height + (padding * 2);
+
+            // Create new bitmap with white background
+            Bitmap paddedBitmap = new Bitmap(newWidth, newHeight);
+            
+            using (Graphics g = Graphics.FromImage(paddedBitmap))
+            {
+                // Fill with white background
+                g.Clear(Color.White);
+                
+                // Draw original image in the center with padding
+                g.DrawImageUnscaled(sourceImage, padding, padding);
+            }
+
+            return paddedBitmap;
         }
 
         private bool ShouldUseNumericEngine(bool isUpperRow, int position)
