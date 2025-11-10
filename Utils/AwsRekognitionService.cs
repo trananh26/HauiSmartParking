@@ -56,9 +56,17 @@ namespace Auto_parking.Utils
                         Image = new AwsImage
                         {
                             Bytes = memoryStream
+                        },
+                        Filters = new DetectTextFilters
+                        {
+                            WordFilter = new DetectionFilter
+                            {
+                                MinConfidence = (float)_awsConfig.MinConfidenceThreshold,
+                                MinBoundingBoxWidth = (float)_awsConfig.MinBoundingBoxWidth,
+                                MinBoundingBoxHeight = (float)_awsConfig.MinBoundingBoxHeight
+                            }
                         }
                     };
-
                     var detectTextResponse = _rekognitionClient.DetectText(detectTextRequest);
 
                     return ProcessDetectionResponse(detectTextResponse);
@@ -146,7 +154,6 @@ namespace Auto_parking.Utils
                     Confidence = (float)(t.Confidence ?? 0f),
                     BoundingBox = ConvertBoundingBox(t.Geometry.BoundingBox)
                 })
-                .OrderBy(t => t.BoundingBox.Top) // Sắp xếp từ trên xuống dưới
                 .ToList();
 
             result.Words = validDetections
@@ -157,7 +164,6 @@ namespace Auto_parking.Utils
                     Confidence = (float)(t.Confidence ?? 0f),
                     BoundingBox = ConvertBoundingBox(t.Geometry.BoundingBox)
                 })
-                .OrderBy(t => t.BoundingBox.Left) // Sắp xếp từ trái sang phải
                 .ToList();
 
             // Áp dụng lọc confidence nếu được cấu hình
@@ -196,36 +202,7 @@ namespace Auto_parking.Utils
                 result = string.Join("", words.Select(w => w.Text.Trim()));
             }
 
-            // Áp dụng post-processing nếu được cấu hình
-            if (_awsConfig.ApplyPostProcessing && !string.IsNullOrEmpty(result))
-            {
-                result = ApplyPostProcessing(result);
-            }
-
             return result;
-        }
-
-        /// <summary>
-        /// Xử lý sau (post-processing) cho chuỗi biển số theo config
-        /// </summary>
-        private string ApplyPostProcessing(string text)
-        {
-            if (string.IsNullOrEmpty(text))
-                return text;
-
-            // Loại bỏ khoảng trắng thừa nếu được cấu hình
-            if (_awsConfig.RemoveExtraSpaces)
-            {
-                text = System.Text.RegularExpressions.Regex.Replace(text, @"\s+", " ").Trim();
-            }
-
-            // Chuyển thành chữ in hoa nếu được cấu hình
-            if (_awsConfig.ConvertToUpperCase)
-            {
-                text = text.ToUpper();
-            }
-
-            return text;
         }
 
         /// <summary>

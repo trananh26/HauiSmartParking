@@ -83,9 +83,6 @@ namespace Auto_parking.Models
                     MinBoundingBoxWidth = 0.01,
                     MinBoundingBoxHeight = 0.01,
                     FilterByConfidence = true,
-                    ApplyPostProcessing = true,
-                    RemoveExtraSpaces = true,
-                    ConvertToUpperCase = true
                 }
             };
         }
@@ -178,19 +175,5 @@ namespace Auto_parking.Models
         /// </summary>
         public bool FilterByConfidence { get; set; }
 
-        /// <summary>
-        /// Áp d?ng x? lý sau (post-processing)
-        /// </summary>
-        public bool ApplyPostProcessing { get; set; }
-
-        /// <summary>
-        /// Lo?i b? kho?ng tr?ng th?a
-        /// </summary>
-        public bool RemoveExtraSpaces { get; set; }
-
-        /// <summary>
-        /// Chuy?n thành ch? in hoa
-        /// </summary>
-        public bool ConvertToUpperCase { get; set; }
     }
 }

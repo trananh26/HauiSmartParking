@@ -280,7 +280,7 @@ namespace Auto_parking
             
             // Loại bỏ ký tự đặc biệt không hợp lệ
             plateNumber = System.Text.RegularExpressions.Regex.Replace(
-                plateNumber, @"[^A-Z0-9\s\-\.]", "");
+                plateNumber, @"[^A-Z0-9]", "");
 
             return plateNumber;
         }

@@ -68,9 +68,6 @@ namespace Auto_parking
             numMinBoundingBoxWidth.Value = (decimal)_tempConfig.Aws.MinBoundingBoxWidth;
             numMinBoundingBoxHeight.Value = (decimal)_tempConfig.Aws.MinBoundingBoxHeight;
             chkFilterByConfidence.Checked = _tempConfig.Aws.FilterByConfidence;
-            chkApplyPostProcessing.Checked = _tempConfig.Aws.ApplyPostProcessing;
-            chkRemoveExtraSpaces.Checked = _tempConfig.Aws.RemoveExtraSpaces;
-            chkConvertToUpperCase.Checked = _tempConfig.Aws.ConvertToUpperCase;
         }
 
         private void PopulateComPorts()
@@ -173,9 +170,6 @@ namespace Auto_parking
             _tempConfig.Aws.MinBoundingBoxWidth = (double)numMinBoundingBoxWidth.Value;
             _tempConfig.Aws.MinBoundingBoxHeight = (double)numMinBoundingBoxHeight.Value;
             _tempConfig.Aws.FilterByConfidence = chkFilterByConfidence.Checked;
-            _tempConfig.Aws.ApplyPostProcessing = chkApplyPostProcessing.Checked;
-            _tempConfig.Aws.RemoveExtraSpaces = chkRemoveExtraSpaces.Checked;
-            _tempConfig.Aws.ConvertToUpperCase = chkConvertToUpperCase.Checked;
         }
 
         private void btnCancel_Click(object sender, EventArgs e)
