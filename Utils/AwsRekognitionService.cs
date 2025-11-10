@@ -1,4 +1,4 @@
-using Amazon;
+Ôªøusing Amazon;
 using Amazon.Rekognition;
 using Amazon.Rekognition.Model;
 using System;
@@ -11,7 +11,7 @@ using AwsImage = Amazon.Rekognition.Model.Image;
 namespace Auto_parking.Utils
 {
     /// <summary>
-    /// Service ?? t??ng t·c v?i AWS Rekognition ?? nh?n di?n text trÍn ?nh
+    /// Service ?? t??ng t√°c v?i AWS Rekognition ?? nh?n di?n text tr√™n ?nh
     /// </summary>
     public class AwsRekognitionService : IDisposable
     {
@@ -26,7 +26,7 @@ namespace Auto_parking.Utils
             if (string.IsNullOrEmpty(awsConfig.AccessKey) || string.IsNullOrEmpty(awsConfig.SecretKey))
             {
                 throw new InvalidOperationException(
-                    "AWS credentials ch?a ???c c?u hÏnh. Vui lÚng ki?m tra appsettings.json");
+                    "AWS credentials ch∆∞a ƒë∆∞·ª£c c·∫•u h√¨nh. Vui l√≤ng ki·ªÉm tra appsettings.json");
             }
 
             // Parse region
@@ -102,14 +102,14 @@ namespace Auto_parking.Utils
                 throw new ArgumentNullException(nameof(imagePath));
 
             if (!File.Exists(imagePath))
-                throw new FileNotFoundException("File khÙng t?n t?i", imagePath);
+                throw new FileNotFoundException("File kh√¥ng t·ªìn t·∫°i", imagePath);
 
             byte[] imageBytes = File.ReadAllBytes(imagePath);
             return DetectTextFromImage(imageBytes);
         }
 
         /// <summary>
-        /// X? l˝ response t? AWS Rekognition
+        /// X? l√Ω response t? AWS Rekognition
         /// </summary>
         private AwsRekognitionResult ProcessDetectionResponse(DetectTextResponse response)
         {
@@ -118,7 +118,7 @@ namespace Auto_parking.Utils
             if (response.TextDetections == null || response.TextDetections.Count == 0)
             {
                 result.Success = false;
-                result.ErrorMessage = "KhÙng ph·t hi?n text trong ?nh";
+                result.ErrorMessage = "Kh√¥ng ph√°t hi·ªán text trong ·∫£nh";
                 return result;
             }
 
@@ -127,7 +127,7 @@ namespace Auto_parking.Utils
                 .Where(t => t.Confidence >= _minConfidence)
                 .ToList();
 
-            // T·ch LINE v‡ WORD
+            // T√°ch LINE v√† WORD
             result.Lines = validDetections
                 .Where(t => t.Type == TextTypes.LINE)
                 .Select(t => new DetectedText
@@ -136,7 +136,7 @@ namespace Auto_parking.Utils
                     Confidence = (float)(t.Confidence ?? 0f),
                     BoundingBox = ConvertBoundingBox(t.Geometry.BoundingBox)
                 })
-                .OrderBy(t => t.BoundingBox.Top) // S?p x?p t? trÍn xu?ng d??i
+                .OrderBy(t => t.BoundingBox.Top) // S?p x?p t? tr√™n xu?ng d??i
                 .ToList();
 
             result.Words = validDetections
@@ -147,28 +147,28 @@ namespace Auto_parking.Utils
                     Confidence = (float)(t.Confidence ?? 0f),
                     BoundingBox = ConvertBoundingBox(t.Geometry.BoundingBox)
                 })
-                .OrderBy(t => t.BoundingBox.Left) // S?p x?p t? tr·i sang ph?i
+                .OrderBy(t => t.BoundingBox.Left) // S?p x?p t? tr√°i sang ph?i
                 .ToList();
 
-            // GhÈp text th‡nh chu?i bi?n s?
+            // Gh√©p text th√†nh chu?i bi?n s?
             result.PlateNumber = ExtractLicensePlateNumber(result.Lines, result.Words);
 
             return result;
         }
 
         /// <summary>
-        /// TrÌch xu?t bi?n s? xe t? c·c text ?„ detect
+        /// Tr√≠ch xu?t bi?n s? xe t? c√°c text ?√£ detect
         /// </summary>
         private string ExtractLicensePlateNumber(List<DetectedText> lines, List<DetectedText> words)
         {
             if (lines.Count > 0)
             {
-                // ?u tiÍn l?y text t? LINE (?„ ???c AWS ghÈp s?n)
+                // ?u ti√™n l?y text t? LINE (?√£ ???c AWS gh√©p s?n)
                 return string.Join(" ", lines.Select(l => l.Text.Trim()));
             }
             else if (words.Count > 0)
             {
-                // Fallback: ghÈp t? WORD
+                // Fallback: gh√©p t? WORD
                 return string.Join("", words.Select(w => w.Text.Trim()));
             }
 
@@ -259,7 +259,7 @@ namespace Auto_parking.Utils
     }
 
     /// <summary>
-    /// Text ???c ph·t hi?n
+    /// Text ???c ph√°t hi?n
     /// </summary>
     public class DetectedText
     {
