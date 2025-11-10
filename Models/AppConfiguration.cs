@@ -71,7 +71,8 @@ namespace Auto_parking.Models
                     ParkingSlots = 5,
                     ParkingFeePerUnit = 10000,
                     GCIntervalSeconds = 30,
-                    Language = "vi-VN"
+                    Language = "vi-VN",
+                    EnableTestMode = false
                 },
                 Aws = new AwsSettings
                 {
@@ -128,6 +129,7 @@ namespace Auto_parking.Models
         public int ParkingFeePerUnit { get; set; }
         public int GCIntervalSeconds { get; set; }
         public string Language { get; set; }
+        public bool EnableTestMode { get; set; }
     }
 
     public class AwsSettings

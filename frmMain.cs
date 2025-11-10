@@ -376,7 +376,7 @@ namespace Auto_parking
             }
             finally
             {
-                frmImage.ShowDialog();
+                //frmImage.ShowDialog();
                 // Force cleanup
                 GC.Collect();
                 GC.WaitForPendingFinalizers();
@@ -572,6 +572,13 @@ namespace Auto_parking
             InitializeSerialPorts();
 
             frmImage = new frmImage();
+
+            // Load test mode configuration
+            var config = Utils.ConfigurationManager.Instance.Config;
+            bool enableTestMode = config.System.EnableTestMode;
+            btn_chupIP.Visible = enableTestMode;
+            btn_chupOP.Visible = enableTestMode;
+            btnTest.Visible = enableTestMode;
 
             _gcTimer = new System.Windows.Forms.Timer();
             _gcTimer.Interval = 30000;
