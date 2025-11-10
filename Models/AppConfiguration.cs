@@ -79,7 +79,13 @@ namespace Auto_parking.Models
                     AccessKey = "",
                     SecretKey = "",
                     Region = "ap-southeast-1",
-                    MinConfidenceThreshold = 80.0
+                    MinConfidenceThreshold = 80.0,
+                    MinBoundingBoxWidth = 0.01,
+                    MinBoundingBoxHeight = 0.01,
+                    FilterByConfidence = true,
+                    ApplyPostProcessing = true,
+                    RemoveExtraSpaces = true,
+                    ConvertToUpperCase = true
                 }
             };
         }
@@ -132,11 +138,59 @@ namespace Auto_parking.Models
         public bool EnableTestMode { get; set; }
     }
 
+    /// <summary>
+    /// C?u hình AWS Rekognition v?i các tham s? t?i ?u
+    /// </summary>
     public class AwsSettings
     {
+        /// <summary>
+        /// AWS Access Key
+        /// </summary>
         public string AccessKey { get; set; }
+
+        /// <summary>
+        /// AWS Secret Key
+        /// </summary>
         public string SecretKey { get; set; }
+
+        /// <summary>
+        /// AWS Region (ap-southeast-1, us-east-1, ...)
+        /// </summary>
         public string Region { get; set; }
+
+        /// <summary>
+        /// Ng??ng confidence t?i thi?u (0-100)
+        /// </summary>
         public double MinConfidenceThreshold { get; set; }
+
+        /// <summary>
+        /// Chi?u r?ng t?i thi?u c?a bounding box (0-1)
+        /// </summary>
+        public double MinBoundingBoxWidth { get; set; }
+
+        /// <summary>
+        /// Chi?u cao t?i thi?u c?a bounding box (0-1)
+        /// </summary>
+        public double MinBoundingBoxHeight { get; set; }
+
+        /// <summary>
+        /// L?c k?t qu? theo confidence
+        /// </summary>
+        public bool FilterByConfidence { get; set; }
+
+        /// <summary>
+        /// Áp d?ng x? lý sau (post-processing)
+        /// </summary>
+        public bool ApplyPostProcessing { get; set; }
+
+        /// <summary>
+        /// Lo?i b? kho?ng tr?ng th?a
+        /// </summary>
+        public bool RemoveExtraSpaces { get; set; }
+
+        /// <summary>
+        /// Chuy?n thành ch? in hoa
+        /// </summary>
+        public bool ConvertToUpperCase { get; set; }
     }
 }

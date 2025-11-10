@@ -11,38 +11,36 @@ using AwsImage = Amazon.Rekognition.Model.Image;
 namespace Auto_parking.Utils
 {
     /// <summary>
-    /// Service ?? t??ng tác v?i AWS Rekognition ?? nh?n di?n text trên ?nh
+    /// Service tương tác với AWS Rekognition để nhận diện text trên ảnh
     /// </summary>
     public class AwsRekognitionService : IDisposable
     {
         private readonly AmazonRekognitionClient _rekognitionClient;
-        private readonly double _minConfidence;
+        private readonly Models.AwsSettings _awsConfig;
         private bool _disposed = false;
 
         public AwsRekognitionService()
         {
-            var awsConfig = ConfigurationManager.Instance.Config.Aws;
+            _awsConfig = ConfigurationManager.Instance.Config.Aws;
 
-            if (string.IsNullOrEmpty(awsConfig.AccessKey) || string.IsNullOrEmpty(awsConfig.SecretKey))
+            if (string.IsNullOrEmpty(_awsConfig.AccessKey) || string.IsNullOrEmpty(_awsConfig.SecretKey))
             {
                 throw new InvalidOperationException(
                     "AWS credentials chưa được cấu hình. Vui lòng kiểm tra appsettings.json");
             }
 
             // Parse region
-            RegionEndpoint region = ParseRegion(awsConfig.Region);
+            RegionEndpoint region = ParseRegion(_awsConfig.Region);
 
-            // Kh?i t?o client
+            // Khởi tạo client
             _rekognitionClient = new AmazonRekognitionClient(
-                awsConfig.AccessKey,
-                awsConfig.SecretKey,
+                _awsConfig.AccessKey,
+                _awsConfig.SecretKey,
                 region);
-
-            _minConfidence = awsConfig.MinConfidenceThreshold;
         }
 
         /// <summary>
-        /// Nh?n di?n text t? byte array c?a ?nh
+        /// Nhận diện text từ byte array của ảnh
         /// </summary>
         public AwsRekognitionResult DetectTextFromImage(byte[] imageBytes)
         {
@@ -51,17 +49,20 @@ namespace Auto_parking.Utils
 
             try
             {
-                var detectTextRequest = new DetectTextRequest
+                using (var memoryStream = new MemoryStream(imageBytes))
                 {
-                    Image = new AwsImage
+                    var detectTextRequest = new DetectTextRequest
                     {
-                        Bytes = new MemoryStream(imageBytes)
-                    }
-                };
+                        Image = new AwsImage
+                        {
+                            Bytes = memoryStream
+                        }
+                    };
 
-                var detectTextResponse = _rekognitionClient.DetectText(detectTextRequest);
+                    var detectTextResponse = _rekognitionClient.DetectText(detectTextRequest);
 
-                return ProcessDetectionResponse(detectTextResponse);
+                    return ProcessDetectionResponse(detectTextResponse);
+                }
             }
             catch (AmazonRekognitionException ex)
             {
@@ -82,7 +83,7 @@ namespace Auto_parking.Utils
         }
 
         /// <summary>
-        /// Nh?n di?n text t? Bitmap
+        /// Nhận diện text từ Bitmap
         /// </summary>
         public AwsRekognitionResult DetectTextFromBitmap(Bitmap image)
         {
@@ -94,7 +95,7 @@ namespace Auto_parking.Utils
         }
 
         /// <summary>
-        /// Nh?n di?n text t? file path
+        /// Nhận diện text từ file path
         /// </summary>
         public AwsRekognitionResult DetectTextFromFile(string imagePath)
         {
@@ -109,7 +110,7 @@ namespace Auto_parking.Utils
         }
 
         /// <summary>
-        /// X? lý response t? AWS Rekognition
+        /// Xử lý response từ AWS Rekognition với các tham số tối ưu từ config
         /// </summary>
         private AwsRekognitionResult ProcessDetectionResponse(DetectTextResponse response)
         {
@@ -122,10 +123,19 @@ namespace Auto_parking.Utils
                 return result;
             }
 
-            // L?c theo confidence threshold
+            // Lọc theo confidence threshold từ config
             var validDetections = response.TextDetections
-                .Where(t => t.Confidence >= _minConfidence)
+                .Where(t => t.Confidence >= _awsConfig.MinConfidenceThreshold)
                 .ToList();
+
+            // Áp dụng lọc bounding box nếu được cấu hình
+            if (_awsConfig.MinBoundingBoxWidth > 0 || _awsConfig.MinBoundingBoxHeight > 0)
+            {
+                validDetections = validDetections
+                    .Where(t => (t.Geometry?.BoundingBox?.Width ?? 0) >= _awsConfig.MinBoundingBoxWidth &&
+                                (t.Geometry?.BoundingBox?.Height ?? 0) >= _awsConfig.MinBoundingBoxHeight)
+                    .ToList();
+            }
 
             // Tách LINE và WORD
             result.Lines = validDetections
@@ -136,7 +146,7 @@ namespace Auto_parking.Utils
                     Confidence = (float)(t.Confidence ?? 0f),
                     BoundingBox = ConvertBoundingBox(t.Geometry.BoundingBox)
                 })
-                .OrderBy(t => t.BoundingBox.Top) // S?p x?p t? trên xu?ng d??i
+                .OrderBy(t => t.BoundingBox.Top) // Sắp xếp từ trên xuống dưới
                 .ToList();
 
             result.Words = validDetections
@@ -147,32 +157,75 @@ namespace Auto_parking.Utils
                     Confidence = (float)(t.Confidence ?? 0f),
                     BoundingBox = ConvertBoundingBox(t.Geometry.BoundingBox)
                 })
-                .OrderBy(t => t.BoundingBox.Left) // S?p x?p t? trái sang ph?i
+                .OrderBy(t => t.BoundingBox.Left) // Sắp xếp từ trái sang phải
                 .ToList();
 
-            // Ghép text thành chu?i bi?n s?
+            // Áp dụng lọc confidence nếu được cấu hình
+            if (_awsConfig.FilterByConfidence)
+            {
+                result.Lines = result.Lines
+                    .Where(l => l.Confidence >= _awsConfig.MinConfidenceThreshold)
+                    .ToList();
+
+                result.Words = result.Words
+                    .Where(w => w.Confidence >= _awsConfig.MinConfidenceThreshold)
+                    .ToList();
+            }
+
+            // Ghép text thành chuỗi biển số
             result.PlateNumber = ExtractLicensePlateNumber(result.Lines, result.Words);
 
             return result;
         }
 
         /// <summary>
-        /// Trích xu?t bi?n s? xe t? các text ?ã detect
+        /// Trích xuất biển số xe từ các text đã detect
         /// </summary>
         private string ExtractLicensePlateNumber(List<DetectedText> lines, List<DetectedText> words)
         {
+            string result = string.Empty;
+
             if (lines.Count > 0)
             {
-                // ?u tiên l?y text t? LINE (?ã ???c AWS ghép s?n)
-                return string.Join(" ", lines.Select(l => l.Text.Trim()));
+                // Ưu tiên lấy text từ LINE (đã được AWS ghép sẵn)
+                result = string.Join(" ", lines.Select(l => l.Text.Trim()));
             }
             else if (words.Count > 0)
             {
-                // Fallback: ghép t? WORD
-                return string.Join("", words.Select(w => w.Text.Trim()));
+                // Fallback: ghép từ WORD
+                result = string.Join("", words.Select(w => w.Text.Trim()));
             }
 
-            return string.Empty;
+            // Áp dụng post-processing nếu được cấu hình
+            if (_awsConfig.ApplyPostProcessing && !string.IsNullOrEmpty(result))
+            {
+                result = ApplyPostProcessing(result);
+            }
+
+            return result;
+        }
+
+        /// <summary>
+        /// Xử lý sau (post-processing) cho chuỗi biển số theo config
+        /// </summary>
+        private string ApplyPostProcessing(string text)
+        {
+            if (string.IsNullOrEmpty(text))
+                return text;
+
+            // Loại bỏ khoảng trắng thừa nếu được cấu hình
+            if (_awsConfig.RemoveExtraSpaces)
+            {
+                text = System.Text.RegularExpressions.Regex.Replace(text, @"\s+", " ").Trim();
+            }
+
+            // Chuyển thành chữ in hoa nếu được cấu hình
+            if (_awsConfig.ConvertToUpperCase)
+            {
+                text = text.ToUpper();
+            }
+
+            return text;
         }
 
         /// <summary>
@@ -241,7 +294,7 @@ namespace Auto_parking.Utils
     }
 
     /// <summary>
-    /// K?t qu? t? AWS Rekognition
+    /// Kết quả từ AWS Rekognition
     /// </summary>
     public class AwsRekognitionResult
     {
@@ -259,7 +312,7 @@ namespace Auto_parking.Utils
     }
 
     /// <summary>
-    /// Text ???c phát hi?n
+    /// Text được phát hiện
     /// </summary>
     public class DetectedText
     {

@@ -59,6 +59,18 @@ namespace Auto_parking
             numParkingFee.Value = _tempConfig.System.ParkingFeePerUnit;
             numGCInterval.Value = _tempConfig.System.GCIntervalSeconds;
             cboLanguage.Text = _tempConfig.System.Language;
+
+            // AWS Settings Tab
+            txtAwsAccessKey.Text = _tempConfig.Aws.AccessKey;
+            txtAwsSecretKey.Text = _tempConfig.Aws.SecretKey;
+            cboAwsRegion.Text = _tempConfig.Aws.Region;
+            numMinConfidenceThreshold.Value = (decimal)_tempConfig.Aws.MinConfidenceThreshold;
+            numMinBoundingBoxWidth.Value = (decimal)_tempConfig.Aws.MinBoundingBoxWidth;
+            numMinBoundingBoxHeight.Value = (decimal)_tempConfig.Aws.MinBoundingBoxHeight;
+            chkFilterByConfidence.Checked = _tempConfig.Aws.FilterByConfidence;
+            chkApplyPostProcessing.Checked = _tempConfig.Aws.ApplyPostProcessing;
+            chkRemoveExtraSpaces.Checked = _tempConfig.Aws.RemoveExtraSpaces;
+            chkConvertToUpperCase.Checked = _tempConfig.Aws.ConvertToUpperCase;
         }
 
         private void PopulateComPorts()
@@ -98,6 +110,7 @@ namespace Auto_parking
                 config.Recognition = _tempConfig.Recognition;
                 config.Paths = _tempConfig.Paths;
                 config.System = _tempConfig.System;
+                config.Aws = _tempConfig.Aws;
 
                 // Validate
                 if (!ConfigurationManager.Instance.ValidateConfiguration(out string error))
@@ -151,6 +164,18 @@ namespace Auto_parking
             _tempConfig.System.ParkingFeePerUnit = (int)numParkingFee.Value;
             _tempConfig.System.GCIntervalSeconds = (int)numGCInterval.Value;
             _tempConfig.System.Language = cboLanguage.Text;
+
+            // AWS Settings
+            _tempConfig.Aws.AccessKey = txtAwsAccessKey.Text;
+            _tempConfig.Aws.SecretKey = txtAwsSecretKey.Text;
+            _tempConfig.Aws.Region = cboAwsRegion.Text;
+            _tempConfig.Aws.MinConfidenceThreshold = (double)numMinConfidenceThreshold.Value;
+            _tempConfig.Aws.MinBoundingBoxWidth = (double)numMinBoundingBoxWidth.Value;
+            _tempConfig.Aws.MinBoundingBoxHeight = (double)numMinBoundingBoxHeight.Value;
+            _tempConfig.Aws.FilterByConfidence = chkFilterByConfidence.Checked;
+            _tempConfig.Aws.ApplyPostProcessing = chkApplyPostProcessing.Checked;
+            _tempConfig.Aws.RemoveExtraSpaces = chkRemoveExtraSpaces.Checked;
+            _tempConfig.Aws.ConvertToUpperCase = chkConvertToUpperCase.Checked;
         }
 
         private void btnCancel_Click(object sender, EventArgs e)

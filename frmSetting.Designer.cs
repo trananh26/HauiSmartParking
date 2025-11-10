@@ -60,6 +60,25 @@ namespace Auto_parking
             this.label16 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.label14 = new System.Windows.Forms.Label();
+            this.tabAwsSettings = new System.Windows.Forms.TabPage();
+            this.chkConvertToUpperCase = new System.Windows.Forms.CheckBox();
+            this.chkRemoveExtraSpaces = new System.Windows.Forms.CheckBox();
+            this.chkApplyPostProcessing = new System.Windows.Forms.CheckBox();
+            this.chkFilterByConfidence = new System.Windows.Forms.CheckBox();
+            this.numMinBoundingBoxHeight = new System.Windows.Forms.NumericUpDown();
+            this.numMinBoundingBoxWidth = new System.Windows.Forms.NumericUpDown();
+            this.numMinConfidenceThreshold = new System.Windows.Forms.NumericUpDown();
+            this.cboAwsRegion = new System.Windows.Forms.ComboBox();
+            this.txtAwsSecretKey = new System.Windows.Forms.TextBox();
+            this.txtAwsAccessKey = new System.Windows.Forms.TextBox();
+            this.label25 = new System.Windows.Forms.Label();
+            this.label24 = new System.Windows.Forms.Label();
+            this.label23 = new System.Windows.Forms.Label();
+            this.label22 = new System.Windows.Forms.Label();
+            this.label21 = new System.Windows.Forms.Label();
+            this.label20 = new System.Windows.Forms.Label();
+            this.label19 = new System.Windows.Forms.Label();
+            this.label18 = new System.Windows.Forms.Label();
             this.btnSave = new System.Windows.Forms.Button();
             this.btnCancel = new System.Windows.Forms.Button();
             this.btnResetDefault = new System.Windows.Forms.Button();
@@ -79,6 +98,10 @@ namespace Auto_parking
             ((System.ComponentModel.ISupportInitialize)(this.numGCInterval)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numParkingFee)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.numParkingSlots)).BeginInit();
+            this.tabAwsSettings.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numMinBoundingBoxHeight)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numMinBoundingBoxWidth)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numMinConfidenceThreshold)).BeginInit();
             this.SuspendLayout();
             // 
             // tabControl1
@@ -88,6 +111,7 @@ namespace Auto_parking
             this.tabControl1.Controls.Add(this.tabCamera);
             this.tabControl1.Controls.Add(this.tabRecognition);
             this.tabControl1.Controls.Add(this.tabSystem);
+            this.tabControl1.Controls.Add(this.tabAwsSettings);
             this.tabControl1.Location = new System.Drawing.Point(12, 12);
             this.tabControl1.Name = "tabControl1";
             this.tabControl1.SelectedIndex = 0;
@@ -644,6 +668,248 @@ namespace Auto_parking
             this.label14.TabIndex = 0;
             this.label14.Text = "Parking Slots:";
             // 
+            // tabAwsSettings
+            // 
+            this.tabAwsSettings.Controls.Add(this.chkConvertToUpperCase);
+            this.tabAwsSettings.Controls.Add(this.chkRemoveExtraSpaces);
+            this.tabAwsSettings.Controls.Add(this.chkApplyPostProcessing);
+            this.tabAwsSettings.Controls.Add(this.chkFilterByConfidence);
+            this.tabAwsSettings.Controls.Add(this.numMinBoundingBoxHeight);
+            this.tabAwsSettings.Controls.Add(this.numMinBoundingBoxWidth);
+            this.tabAwsSettings.Controls.Add(this.numMinConfidenceThreshold);
+            this.tabAwsSettings.Controls.Add(this.cboAwsRegion);
+            this.tabAwsSettings.Controls.Add(this.txtAwsSecretKey);
+            this.tabAwsSettings.Controls.Add(this.txtAwsAccessKey);
+            this.tabAwsSettings.Controls.Add(this.label25);
+            this.tabAwsSettings.Controls.Add(this.label24);
+            this.tabAwsSettings.Controls.Add(this.label23);
+            this.tabAwsSettings.Controls.Add(this.label22);
+            this.tabAwsSettings.Controls.Add(this.label21);
+            this.tabAwsSettings.Controls.Add(this.label20);
+            this.tabAwsSettings.Controls.Add(this.label19);
+            this.tabAwsSettings.Controls.Add(this.label18);
+            this.tabAwsSettings.Location = new System.Drawing.Point(4, 22);
+            this.tabAwsSettings.Name = "tabAwsSettings";
+            this.tabAwsSettings.Size = new System.Drawing.Size(552, 294);
+            this.tabAwsSettings.TabIndex = 5;
+            this.tabAwsSettings.Text = "AWS Settings";
+            this.tabAwsSettings.UseVisualStyleBackColor = true;
+            // 
+            // label18
+            // 
+            this.label18.AutoSize = true;
+            this.label18.Location = new System.Drawing.Point(20, 23);
+            this.label18.Name = "label18";
+            this.label18.Size = new System.Drawing.Size(93, 13);
+            this.label18.TabIndex = 0;
+            this.label18.Text = "AWS Access Key:";
+            // 
+            // label19
+            // 
+            this.label19.AutoSize = true;
+            this.label19.Location = new System.Drawing.Point(20, 53);
+            this.label19.Name = "label19";
+            this.label19.Size = new System.Drawing.Size(91, 13);
+            this.label19.TabIndex = 1;
+            this.label19.Text = "AWS Secret Key:";
+            // 
+            // label20
+            // 
+            this.label20.AutoSize = true;
+            this.label20.Location = new System.Drawing.Point(20, 83);
+            this.label20.Name = "label20";
+            this.label20.Size = new System.Drawing.Size(72, 13);
+            this.label20.TabIndex = 2;
+            this.label20.Text = "AWS Region:";
+            // 
+            // label21
+            // 
+            this.label21.AutoSize = true;
+            this.label21.Location = new System.Drawing.Point(20, 113);
+            this.label21.Name = "label21";
+            this.label21.Size = new System.Drawing.Size(142, 13);
+            this.label21.TabIndex = 3;
+            this.label21.Text = "Min Confidence Threshold (%):";
+            // 
+            // label22
+            // 
+            this.label22.AutoSize = true;
+            this.label22.Location = new System.Drawing.Point(20, 143);
+            this.label22.Name = "label22";
+            this.label22.Size = new System.Drawing.Size(137, 13);
+            this.label22.TabIndex = 4;
+            this.label22.Text = "Min Bounding Box Width:";
+            // 
+            // label23
+            // 
+            this.label23.AutoSize = true;
+            this.label23.Location = new System.Drawing.Point(20, 173);
+            this.label23.Name = "label23";
+            this.label23.Size = new System.Drawing.Size(139, 13);
+            this.label23.TabIndex = 5;
+            this.label23.Text = "Min Bounding Box Height:";
+            // 
+            // label24
+            // 
+            this.label24.AutoSize = true;
+            this.label24.Font = new System.Drawing.Font("Microsoft Sans Serif", 8.25F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(0)));
+            this.label24.Location = new System.Drawing.Point(20, 200);
+            this.label24.Name = "label24";
+            this.label24.Size = new System.Drawing.Size(114, 13);
+            this.label24.TabIndex = 6;
+            this.label24.Text = "Post-Processing:";
+            // 
+            // label25
+            // 
+            this.label25.AutoSize = true;
+            this.label25.ForeColor = System.Drawing.SystemColors.ControlDarkDark;
+            this.label25.Location = new System.Drawing.Point(177, 143);
+            this.label25.Name = "label25";
+            this.label25.Size = new System.Drawing.Size(34, 13);
+            this.label25.TabIndex = 7;
+            this.label25.Text = "(0-1)";
+            // 
+            // txtAwsAccessKey
+            // 
+            this.txtAwsAccessKey.Location = new System.Drawing.Point(180, 20);
+            this.txtAwsAccessKey.Name = "txtAwsAccessKey";
+            this.txtAwsAccessKey.Size = new System.Drawing.Size(350, 20);
+            this.txtAwsAccessKey.TabIndex = 8;
+            // 
+            // txtAwsSecretKey
+            // 
+            this.txtAwsSecretKey.Location = new System.Drawing.Point(180, 50);
+            this.txtAwsSecretKey.Name = "txtAwsSecretKey";
+            this.txtAwsSecretKey.PasswordChar = '*';
+            this.txtAwsSecretKey.Size = new System.Drawing.Size(350, 20);
+            this.txtAwsSecretKey.TabIndex = 9;
+            // 
+            // cboAwsRegion
+            // 
+            this.cboAwsRegion.FormattingEnabled = true;
+            this.cboAwsRegion.Items.AddRange(new object[] {
+            "ap-southeast-1",
+            "us-east-1",
+            "us-west-2",
+            "eu-west-1",
+            "ap-northeast-1"});
+            this.cboAwsRegion.Location = new System.Drawing.Point(180, 80);
+            this.cboAwsRegion.Name = "cboAwsRegion";
+            this.cboAwsRegion.Size = new System.Drawing.Size(350, 21);
+            this.cboAwsRegion.TabIndex = 10;
+            // 
+            // numMinConfidenceThreshold
+            // 
+            this.numMinConfidenceThreshold.DecimalPlaces = 1;
+            this.numMinConfidenceThreshold.Location = new System.Drawing.Point(180, 110);
+            this.numMinConfidenceThreshold.Maximum = new decimal(new int[] {
+            100,
+            0,
+            0,
+            0});
+            this.numMinConfidenceThreshold.Name = "numMinConfidenceThreshold";
+            this.numMinConfidenceThreshold.Size = new System.Drawing.Size(350, 20);
+            this.numMinConfidenceThreshold.TabIndex = 11;
+            this.numMinConfidenceThreshold.Value = new decimal(new int[] {
+            80,
+            0,
+            0,
+            0});
+            // 
+            // numMinBoundingBoxWidth
+            // 
+            this.numMinBoundingBoxWidth.DecimalPlaces = 3;
+            this.numMinBoundingBoxWidth.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            196608});
+            this.numMinBoundingBoxWidth.Location = new System.Drawing.Point(180, 140);
+            this.numMinBoundingBoxWidth.Maximum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numMinBoundingBoxWidth.Name = "numMinBoundingBoxWidth";
+            this.numMinBoundingBoxWidth.Size = new System.Drawing.Size(350, 20);
+            this.numMinBoundingBoxWidth.TabIndex = 12;
+            this.numMinBoundingBoxWidth.Value = new decimal(new int[] {
+            10,
+            0,
+            0,
+            196608});
+            // 
+            // numMinBoundingBoxHeight
+            // 
+            this.numMinBoundingBoxHeight.DecimalPlaces = 3;
+            this.numMinBoundingBoxHeight.Increment = new decimal(new int[] {
+            1,
+            0,
+            0,
+            196608});
+            this.numMinBoundingBoxHeight.Location = new System.Drawing.Point(180, 170);
+            this.numMinBoundingBoxHeight.Maximum = new decimal(new int[] {
+            1,
+            0,
+            0,
+            0});
+            this.numMinBoundingBoxHeight.Name = "numMinBoundingBoxHeight";
+            this.numMinBoundingBoxHeight.Size = new System.Drawing.Size(350, 20);
+            this.numMinBoundingBoxHeight.TabIndex = 13;
+            this.numMinBoundingBoxHeight.Value = new decimal(new int[] {
+            10,
+            0,
+            0,
+            196608});
+            // 
+            // chkFilterByConfidence
+            // 
+            this.chkFilterByConfidence.AutoSize = true;
+            this.chkFilterByConfidence.Checked = true;
+            this.chkFilterByConfidence.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkFilterByConfidence.Location = new System.Drawing.Point(40, 220);
+            this.chkFilterByConfidence.Name = "chkFilterByConfidence";
+            this.chkFilterByConfidence.Size = new System.Drawing.Size(136, 17);
+            this.chkFilterByConfidence.TabIndex = 14;
+            this.chkFilterByConfidence.Text = "Filter By Confidence";
+            this.chkFilterByConfidence.UseVisualStyleBackColor = true;
+            // 
+            // chkApplyPostProcessing
+            // 
+            this.chkApplyPostProcessing.AutoSize = true;
+            this.chkApplyPostProcessing.Checked = true;
+            this.chkApplyPostProcessing.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkApplyPostProcessing.Location = new System.Drawing.Point(40, 243);
+            this.chkApplyPostProcessing.Name = "chkApplyPostProcessing";
+            this.chkApplyPostProcessing.Size = new System.Drawing.Size(149, 17);
+            this.chkApplyPostProcessing.TabIndex = 15;
+            this.chkApplyPostProcessing.Text = "Apply Post-Processing";
+            this.chkApplyPostProcessing.UseVisualStyleBackColor = true;
+            // 
+            // chkRemoveExtraSpaces
+            // 
+            this.chkRemoveExtraSpaces.AutoSize = true;
+            this.chkRemoveExtraSpaces.Checked = true;
+            this.chkRemoveExtraSpaces.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkRemoveExtraSpaces.Location = new System.Drawing.Point(60, 266);
+            this.chkRemoveExtraSpaces.Name = "chkRemoveExtraSpaces";
+            this.chkRemoveExtraSpaces.Size = new System.Drawing.Size(146, 17);
+            this.chkRemoveExtraSpaces.TabIndex = 16;
+            this.chkRemoveExtraSpaces.Text = "Remove Extra Spaces";
+            this.chkRemoveExtraSpaces.UseVisualStyleBackColor = true;
+            // 
+            // chkConvertToUpperCase
+            // 
+            this.chkConvertToUpperCase.AutoSize = true;
+            this.chkConvertToUpperCase.Checked = true;
+            this.chkConvertToUpperCase.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkConvertToUpperCase.Location = new System.Drawing.Point(230, 266);
+            this.chkConvertToUpperCase.Name = "chkConvertToUpperCase";
+            this.chkConvertToUpperCase.Size = new System.Drawing.Size(149, 17);
+            this.chkConvertToUpperCase.TabIndex = 17;
+            this.chkConvertToUpperCase.Text = "Convert To Upper Case";
+            this.chkConvertToUpperCase.UseVisualStyleBackColor = true;
+            // 
             // btnSave
             // 
             this.btnSave.Location = new System.Drawing.Point(320, 345);
@@ -711,6 +977,11 @@ namespace Auto_parking
             ((System.ComponentModel.ISupportInitialize)(this.numGCInterval)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numParkingFee)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.numParkingSlots)).EndInit();
+            this.tabAwsSettings.ResumeLayout(false);
+            this.tabAwsSettings.PerformLayout();
+            ((System.ComponentModel.ISupportInitialize)(this.numMinBoundingBoxHeight)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numMinBoundingBoxWidth)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.numMinConfidenceThreshold)).EndInit();
             this.ResumeLayout(false);
 
         }
@@ -723,6 +994,7 @@ namespace Auto_parking
         private System.Windows.Forms.TabPage tabCamera;
         private System.Windows.Forms.TabPage tabRecognition;
         private System.Windows.Forms.TabPage tabSystem;
+        private System.Windows.Forms.TabPage tabAwsSettings;
         private System.Windows.Forms.TextBox txtConnectionString;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.Label label1;
@@ -760,6 +1032,24 @@ namespace Auto_parking
         private System.Windows.Forms.Label label16;
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.Label label14;
+        private System.Windows.Forms.Label label18;
+        private System.Windows.Forms.Label label19;
+        private System.Windows.Forms.Label label20;
+        private System.Windows.Forms.Label label21;
+        private System.Windows.Forms.Label label22;
+        private System.Windows.Forms.Label label23;
+        private System.Windows.Forms.Label label24;
+        private System.Windows.Forms.Label label25;
+        private System.Windows.Forms.TextBox txtAwsAccessKey;
+        private System.Windows.Forms.TextBox txtAwsSecretKey;
+        private System.Windows.Forms.ComboBox cboAwsRegion;
+        private System.Windows.Forms.NumericUpDown numMinConfidenceThreshold;
+        private System.Windows.Forms.NumericUpDown numMinBoundingBoxWidth;
+        private System.Windows.Forms.NumericUpDown numMinBoundingBoxHeight;
+        private System.Windows.Forms.CheckBox chkFilterByConfidence;
+        private System.Windows.Forms.CheckBox chkApplyPostProcessing;
+        private System.Windows.Forms.CheckBox chkRemoveExtraSpaces;
+        private System.Windows.Forms.CheckBox chkConvertToUpperCase;
         private System.Windows.Forms.Button btnSave;
         private System.Windows.Forms.Button btnCancel;
         private System.Windows.Forms.Button btnResetDefault;
