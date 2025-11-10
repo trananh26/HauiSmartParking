@@ -25,6 +25,20 @@ namespace Auto_parking
 
         public List<Bitmap> CharImages { get; set; }
 
+        // Thêm thông tin từ AWS Rekognition
+        public float AwsConfidence { get; set; }
+
+        #endregion
+
+        #region Constructor
+
+        public RecognitionResult()
+        {
+            UpperCharacters = new List<Rectangle>();
+            LowerCharacters = new List<Rectangle>();
+            CharImages = new List<Bitmap>();
+        }
+
         #endregion
 
         #region Methods
@@ -34,6 +48,15 @@ namespace Auto_parking
             PlateImage?.Dispose();
             GrayImage?.Dispose();
             ColorImage?.Dispose();
+
+            if (CharImages != null)
+            {
+                foreach (var img in CharImages)
+                {
+                    img?.Dispose();
+                }
+                CharImages.Clear();
+            }
         }
 
         #endregion

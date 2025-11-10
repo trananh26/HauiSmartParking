@@ -23,6 +23,7 @@ namespace Auto_parking
         private TesseractEngine _fullTesseract;
         private TesseractEngine _chTesseract;
         private TesseractEngine _numTesseract;
+        private Utils.AwsRekognitionService _awsService;
         private bool _disposed = false;
 
         #endregion
@@ -35,6 +36,7 @@ namespace Auto_parking
             _cascadePath = cascadePath ?? throw new ArgumentNullException(nameof(cascadePath));
 
             InitializeTesseract();
+            InitializeAwsIfNeeded();
         }
 
         public void Dispose()
@@ -52,6 +54,7 @@ namespace Auto_parking
                 _fullTesseract?.Dispose();
                 _chTesseract?.Dispose();
                 _numTesseract?.Dispose();
+                _awsService?.Dispose();
             }
 
             _disposed = true;
@@ -77,6 +80,32 @@ namespace Auto_parking
             catch (Exception ex)
             {
                 throw new InvalidOperationException("Lỗi khởi tạo Tesseract OCR: " + ex.Message, ex);
+            }
+        }
+
+        private void InitializeAwsIfNeeded()
+        {
+            try
+            {
+                var config = Utils.ConfigurationManager.Instance.Config;
+                
+                // Chỉ khởi tạo AWS nếu method = AwsRekognition
+                if (config.Recognition.Method == Models.RecognitionMethod.AwsRekognition)
+                {
+                    if (string.IsNullOrEmpty(config.Aws.AccessKey) || 
+                        string.IsNullOrEmpty(config.Aws.SecretKey))
+                    {
+                        throw new InvalidOperationException(
+                            "AWS credentials chưa được cấu hình. Vui lòng cập nhật appsettings.json");
+                    }
+
+                    _awsService = new Utils.AwsRekognitionService();
+                }
+            }
+            catch (Exception ex)
+            {
+                System.Diagnostics.Debug.WriteLine($"Lỗi khởi tạo AWS Rekognition: {ex.Message}");
+                // Không throw exception, để fallback sang Tesseract
             }
         }
 
@@ -118,6 +147,7 @@ namespace Auto_parking
 
             try
             {
+                // Bước 1: Tìm vùng chứa biển số (VÙNG A)
                 using (Image<Bgr, byte> plateRegion = FindLicensePlateRegion(image))
                 {
                     if (plateRegion == null)
@@ -129,13 +159,14 @@ namespace Auto_parking
                         };
                     }
 
-                    // Calculate optimal resize dimensions based on Vietnamese plate standards
+                    // Calculate optimal resize dimensions
                     (int width, int height) = CalculateOptimalResizeDimensions(plateRegion.Width, plateRegion.Height);
                     
                     using (Image<Bgr, byte> resized = plateRegion.Resize(width, height, Inter.Linear))
                     using (Bitmap plateBitmap = resized.ToBitmap())
                     {
-                        return ExtractAndRecognizeCharacters(plateBitmap);
+                        // Bước 2: Nhận diện text trong VÙNG A dựa trên config
+                        return RecognizePlateRegion(plateBitmap);
                     }
                 }
             }
@@ -147,6 +178,152 @@ namespace Auto_parking
                     ErrorMessage = "Lỗi nhận diện: " + ex.Message
                 };
             }
+        }
+
+        #endregion
+
+        #region Recognition Methods
+
+        /// <summary>
+        /// Nhận diện VÙNG A (vùng biển số đã được detect) - CHỈ GỬI VÙNG NÀY
+        /// </summary>
+        private RecognitionResult RecognizePlateRegion(Bitmap plateRegionImage)
+        {
+            var config = Utils.ConfigurationManager.Instance.Config;
+
+            switch (config.Recognition.Method)
+            {
+                case Models.RecognitionMethod.Tesseract:
+                    // Phương thức 1: Sử dụng Tesseract OCR (code hiện tại)
+                    return RecognizeWithTesseract(plateRegionImage);
+
+                case Models.RecognitionMethod.AwsRekognition:
+                    // Phương thức 2: Gửi lên AWS Rekognition
+                    return RecognizeWithAws(plateRegionImage);
+
+                default:
+                    return new RecognitionResult
+                    {
+                        Success = false,
+                        ErrorMessage = "Phương thức nhận diện không hợp lệ"
+                    };
+            }
+        }
+
+        /// <summary>
+        /// Phương thức 1: Nhận diện bằng Tesseract (luồng code hiện tại)
+        /// </summary>
+        private RecognitionResult RecognizeWithTesseract(Bitmap plateImage)
+        {
+            return ExtractAndRecognizeCharacters(plateImage);
+        }
+
+        /// <summary>
+        /// Phương thức 2: Nhận diện bằng AWS Rekognition
+        /// </summary>
+        private RecognitionResult RecognizeWithAws(Bitmap plateImage)
+        {
+            if (_awsService == null)
+            {
+                // Fallback to Tesseract nếu AWS chưa khởi tạo
+                System.Diagnostics.Debug.WriteLine("AWS service not available, falling back to Tesseract");
+                return RecognizeWithTesseract(plateImage);
+            }
+
+            try
+            {
+                var awsResult = _awsService.DetectTextFromBitmap(plateImage);
+
+                if (!awsResult.Success)
+                {
+                    // Fallback to Tesseract nếu AWS fail
+                    System.Diagnostics.Debug.WriteLine($"AWS failed: {awsResult.ErrorMessage}, falling back to Tesseract");
+                    return RecognizeWithTesseract(plateImage);
+                }
+
+                // Xử lý kết quả từ AWS
+                string cleanedPlateNumber = CleanAwsPlateNumber(awsResult.PlateNumber);
+
+                return new RecognitionResult
+                {
+                    Success = true,
+                    PlateNumber = cleanedPlateNumber,
+                    FormattedText = FormatPlateNumber(cleanedPlateNumber),
+                    PlateImage = (Bitmap)plateImage.Clone(),
+                    AwsConfidence = awsResult.Lines.Count > 0 
+                        ? awsResult.Lines.Average(l => l.Confidence) 
+                        : 0
+                };
+            }
+            catch (Exception ex)
+            {
+                // Fallback to Tesseract on error
+                System.Diagnostics.Debug.WriteLine($"AWS exception: {ex.Message}, falling back to Tesseract");
+                return RecognizeWithTesseract(plateImage);
+            }
+        }
+
+        #endregion
+
+        #region Helper Methods for AWS
+
+        /// <summary>
+        /// Làm sạch text biển số từ AWS
+        /// </summary>
+        private string CleanAwsPlateNumber(string plateNumber)
+        {
+            if (string.IsNullOrEmpty(plateNumber))
+                return string.Empty;
+
+            // Loại bỏ khoảng trắng thừa
+            plateNumber = plateNumber.Trim();
+            
+            // Loại bỏ ký tự đặc biệt không hợp lệ
+            plateNumber = System.Text.RegularExpressions.Regex.Replace(
+                plateNumber, @"[^A-Z0-9\s\-\.]", "");
+
+            return plateNumber;
+        }
+
+        /// <summary>
+        /// Format biển số theo chuẩn VN (nếu cần)
+        /// </summary>
+        private string FormatPlateNumber(string plateNumber)
+        {
+            if (string.IsNullOrEmpty(plateNumber))
+                return string.Empty;
+
+            // Nếu có dấu xuống dòng hoặc space, giữ nguyên
+            if (plateNumber.Contains("\n") || plateNumber.Contains("\r"))
+                return plateNumber;
+
+            // Format: XX-Y ZZZZ (ví dụ: 30A-12345)
+            plateNumber = plateNumber.Replace(" ", "").Replace("-", "");
+            
+            if (plateNumber.Length >= 6)
+            {
+                // Tách thành: [2 số tỉnh][1 chữ loại xe][4-5 số biển]
+                if (plateNumber.Length > 1 && 
+                    char.IsDigit(plateNumber[0]) && 
+                    char.IsDigit(plateNumber[1]))
+                {
+                    string result = plateNumber.Substring(0, 2); // Mã tỉnh
+                    
+                    if (plateNumber.Length > 2 && char.IsLetter(plateNumber[2]))
+                    {
+                        result += plateNumber[2]; // Loại xe
+                        
+                        if (plateNumber.Length > 3)
+                        {
+                            result += "-" + plateNumber.Substring(3); // Số biển
+                        }
+                    }
+                    
+                    return result;
+                }
+            }
+
+            return plateNumber;
         }
 
         #endregion

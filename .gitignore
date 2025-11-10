@@ -117,3 +117,22 @@ $RECYCLE.BIN/
 .idea/
 *.sln.iml
 ```
+
+## ⚠️ AWS Credentials - QUAN TRỌNG: Không commit credentials!
+# Bảo vệ file chứa AWS Access Key và Secret Key
+```
+App_Data/appsettings.json
+appsettings.json
+**/appsettings.json
+**/appsettings.*.json
+```
+
+## Data files
+```
+data/
+App_Data/data/
+*.bmp
+*.jpg
+*.jpeg
+*.png
+```

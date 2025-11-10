@@ -76,6 +76,7 @@
       <DependentUpon>frmSetting.cs</DependentUpon>
     </Compile>
     <Compile Include="Models\AppConfiguration.cs" />
+    <Compile Include="Utils\AwsRekognitionService.cs" />
     <Compile Include="Utils\ConfigurationManager.cs" />
     <Compile Include="Utils\LicensePlateRecognizer.cs" />
     <Compile Include="Utils\BitmapExtension.cs" />
@@ -204,6 +205,12 @@
   <ItemGroup>
     <PackageReference Include="AForge.Video.DirectShow">
       <Version>2.2.5</Version>
+    </PackageReference>
+    <PackageReference Include="AWSSDK.Core">
+      <Version>4.0.3</Version>
+    </PackageReference>
+    <PackageReference Include="AWSSDK.Rekognition">
+      <Version>4.0.3.2</Version>
     </PackageReference>
     <PackageReference Include="Emgu.CV">
       <Version>4.12.0.5764</Version>

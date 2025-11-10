@@ -1,9 +1,26 @@
 using System;
 using System.IO;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
 
 namespace Auto_parking.Models
 {
+    /// <summary>
+    /// Ph??ng th?c nh?n di?n bi?n s?
+    /// </summary>
+    public enum RecognitionMethod
+    {
+        /// <summary>
+        /// 1 - S? d?ng Tesseract OCR (lu?ng code hi?n t?i)
+        /// </summary>
+        Tesseract = 1,
+
+        /// <summary>
+        /// 2 - G?i lên AWS Rekognition
+        /// </summary>
+        AwsRekognition = 2
+    }
+
     public class AppConfiguration
     {
         public DatabaseSettings Database { get; set; }
@@ -12,6 +29,7 @@ namespace Auto_parking.Models
         public RecognitionSettings Recognition { get; set; }
         public PathSettings Paths { get; set; }
         public SystemSettings System { get; set; }
+        public AwsSettings Aws { get; set; }
 
         public static AppConfiguration LoadDefault()
         {
@@ -40,7 +58,8 @@ namespace Auto_parking.Models
                 {
                     TesseractDataPath = "App_Data\\data",
                     CascadePath = "App_Data\\data\\output-hv-33-x25.xml",
-                    GrayscaleThreshold = 44
+                    GrayscaleThreshold = 44,
+                    Method = RecognitionMethod.Tesseract
                 },
                 Paths = new PathSettings
                 {
@@ -53,6 +72,13 @@ namespace Auto_parking.Models
                     ParkingFeePerUnit = 10000,
                     GCIntervalSeconds = 30,
                     Language = "vi-VN"
+                },
+                Aws = new AwsSettings
+                {
+                    AccessKey = "",
+                    SecretKey = "",
+                    Region = "ap-southeast-1",
+                    MinConfidenceThreshold = 80.0
                 }
             };
         }
@@ -85,6 +111,9 @@ namespace Auto_parking.Models
         public string TesseractDataPath { get; set; }
         public string CascadePath { get; set; }
         public int GrayscaleThreshold { get; set; }
+        
+        [JsonConverter(typeof(StringEnumConverter))]
+        public RecognitionMethod Method { get; set; }
     }
 
     public class PathSettings
@@ -99,5 +128,13 @@ namespace Auto_parking.Models
         public int ParkingFeePerUnit { get; set; }
         public int GCIntervalSeconds { get; set; }
         public string Language { get; set; }
+    }
+
+    public class AwsSettings
+    {
+        public string AccessKey { get; set; }
+        public string SecretKey { get; set; }
+        public string Region { get; set; }
+        public double MinConfidenceThreshold { get; set; }
     }
 }
