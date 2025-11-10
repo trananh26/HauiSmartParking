@@ -68,8 +68,11 @@ namespace Auto_parking
             InitializeComponent();
             CheckForIllegalCrossThreadCalls = false;
 
-            m_path = Path.Combine(Application.StartupPath, "data") + Path.DirectorySeparatorChar;
-            m_tesseractDataPath = Path.Combine(Application.StartupPath, "App_Data", "data");
+            // Load configuration từ ConfigurationManager
+            var config = Utils.ConfigurationManager.Instance.Config;
+
+            m_path = config.Paths.DataDirectory + Path.DirectorySeparatorChar;
+            m_tesseractDataPath = config.Recognition.TesseractDataPath;
 
             // Ensure data directory exists
             if (!Directory.Exists(m_path))
@@ -77,8 +80,9 @@ namespace Auto_parking
                 Directory.CreateDirectory(m_path);
             }
 
-            string cascadePath = Path.Combine(Application.StartupPath, "App_Data", "data", "output-hv-33-x25.xml");
-            _plateRecognizer = new LicensePlateRecognizer(m_tesseractDataPath, cascadePath);
+            _plateRecognizer = new LicensePlateRecognizer(
+                m_tesseractDataPath, 
+                config.Recognition.CascadePath);
         }
 
         #endregion
@@ -554,6 +558,10 @@ namespace Auto_parking
 
         private void MainForm_Load(object sender, EventArgs e)
         {
+            // BẬT KeyPreview để bắt phím tắt
+            this.KeyPreview = true;
+            this.KeyDown += MainForm_KeyDown;
+
             GetCameraInfor();
 
             lblMoney.Visible = false;
@@ -582,13 +590,15 @@ namespace Auto_parking
         {
             try
             {
-                STM1_Serial.PortName = XINIFILE.ReadValue("COM_STM1");
-                STM1_Serial.BaudRate = int.Parse(XINIFILE.ReadValue("BAURATE"));
+                var config = Utils.ConfigurationManager.Instance.Config.SerialPort;
+
+                STM1_Serial.PortName = config.COM_STM1;
+                STM1_Serial.BaudRate = config.BaudRate;
                 STM1_Serial.Open();
                 STM1_Serial.DataReceived += STM1_Serial_DataReceived;
 
-                STM2_Serial.PortName = XINIFILE.ReadValue("COM_STM2");
-                STM2_Serial.BaudRate = int.Parse(XINIFILE.ReadValue("BAURATE"));
+                STM2_Serial.PortName = config.COM_STM2;
+                STM2_Serial.BaudRate = config.BaudRate;
                 STM2_Serial.Open();
                 STM2_Serial.DataReceived += STM2_Serial_DataReceived;
 
@@ -887,6 +897,56 @@ namespace Auto_parking
             catch (Exception ex)
             {
                 MessageBox.Show(ex.Message, "ERROR", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            }
+        }
+
+        /// <summary>
+        /// Xử lý phím tắt Ctrl+I để mở form Settings
+        /// </summary>
+        private void MainForm_KeyDown(object sender, KeyEventArgs e)
+        {
+            // Kiểm tra Ctrl + I
+            if (e.Control && e.KeyCode == Keys.I)
+            {
+                OpenSettingsForm();
+                e.Handled = true; // Ngăn event bubble lên
+            }
+        }
+
+        /// <summary>
+        /// Mở form Settings
+        /// </summary>
+        private void OpenSettingsForm()
+        {
+            try
+            {
+                using (frmSetting settingForm = new frmSetting())
+                {
+                    settingForm.StartPosition = FormStartPosition.CenterParent;
+                    
+                    DialogResult result = settingForm.ShowDialog(this);
+                    
+                    if (result == DialogResult.OK)
+                    {
+                        // Thông báo cho user restart app
+                        DialogResult restart = MessageBox.Show(
+                            "Cấu hình đã được lưu.\n\nBạn có muốn khởi động lại ứng dụng ngay bây giờ?",
+                            "Khởi động lại",
+                            MessageBoxButtons.YesNo,
+                            MessageBoxIcon.Question);
+
+                        if (restart == DialogResult.Yes)
+                        {
+                            Application.Restart();
+                            Environment.Exit(0);
+                        }
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show("Lỗi khi mở form cài đặt: " + ex.Message,
+                    "Lỗi", MessageBoxButtons.OK, MessageBoxIcon.Error);
             }
         }
 

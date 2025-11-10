@@ -9,9 +9,9 @@ namespace Auto_parking
 {
     public class DLDatabase
     {
-        static string connString = @"Data Source=.\SQLEXPRESS;Initial Catalog=Haui_SmartParking;Integrated Security=True";
-
-        private static string ConnectionString = connString;
+        // Thay thế hardcoded connection string bằng property đọc từ ConfigurationManager
+        private static string ConnectionString => Utils.ConfigurationManager.Instance.Config.Database.ConnectionString;
+        
         private SqlConnection conn = new SqlConnection(ConnectionString);
         private SqlCommand cmd = new SqlCommand();
         private SqlDataAdapter da;

@@ -12,7 +12,8 @@ namespace Auto_parking
 {
     public class clsCommon
     {
-        string connString = @"Data Source=.\SQLEXPRESS;Initial Catalog=Haui_SmartParking;Integrated Security=True";
+        // Thay thế hardcoded connection string bằng property đọc từ ConfigurationManager
+        private string ConnString => Utils.ConfigurationManager.Instance.Config.Database.ConnectionString;
 
        
         DLDatabase db = new DLDatabase();
@@ -27,7 +28,7 @@ namespace Auto_parking
             DateTime thoigian = DateTime.Now;
             string query = "select * from SystemHistoryData Where InputTime > '" + thoigian.ToString("yyyy-MM-dd 00:00:00") + "' AND InputTime < '" + thoigian.ToString("yyyy-MM-dd 23:59:59") + "'";
             //sqlconnection
-            using (SqlConnection connection = new SqlConnection(connString))
+            using (SqlConnection connection = new SqlConnection(ConnString))
             {
                 connection.Open();
 
@@ -50,7 +51,7 @@ namespace Auto_parking
             DateTime thoigian = DateTime.Now;
             string query = "select * from SystemHistoryData Where OutputTime > '" + thoigian.ToString("yyyy-MM-dd 00:00:00") + "' AND OutputTime < '" + thoigian.ToString("yyyy-MM-dd 23:59:59") + "'";
 
-            using (SqlConnection connection = new SqlConnection(connString))
+            using (SqlConnection connection = new SqlConnection(ConnString))
             {
                 connection.Open();
 
@@ -102,7 +103,7 @@ namespace Auto_parking
 
             //sqlconnection
             string query = "select * from RFID_Managerment WHERE RFCode = '" + m_RF + "'";
-            using (SqlConnection connection = new SqlConnection(connString))
+            using (SqlConnection connection = new SqlConnection(ConnString))
             {
                 connection.Open();
 
@@ -126,7 +127,7 @@ namespace Auto_parking
 
             //sqlconnection
             string query = "select * from CurentSystemData WHERE CarNumber = '" + bienso + "'";
-            using (SqlConnection connection = new SqlConnection(connString))
+            using (SqlConnection connection = new SqlConnection(ConnString))
             {
                 connection.Open();
 
@@ -151,7 +152,7 @@ namespace Auto_parking
 
             //sqlconnection
             string query = "select * from CurentSystemData WHERE CarNumber = '" + bienso + "' AND RFCode = '" + m_RF + "'";
-            using (SqlConnection connection = new SqlConnection(connString))
+            using (SqlConnection connection = new SqlConnection(ConnString))
             {
                 connection.Open();
 
@@ -174,7 +175,7 @@ namespace Auto_parking
                 DateTime thoigian = DateTime.Now;
                 DataTable data = new DataTable();
                 string query = "Select SUM(Money) AS Money From TotalMoney Where UpdateTime > '" + thoigian.ToString("yyyy-MM-dd 00:00:00") + "' AND UpdateTime < '" + thoigian.ToString("yyyy-MM-dd 23:59:59") + "'";
-                using (SqlConnection connection = new SqlConnection(connString))
+                using (SqlConnection connection = new SqlConnection(ConnString))
                 {
                     connection.Open();
                     SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
@@ -201,7 +202,7 @@ namespace Auto_parking
         {
             DateTime thoigian = DateTime.Now;
             //Lịch sử thi tiền
-            using (SqlConnection connection = new SqlConnection(connString))
+            using (SqlConnection connection = new SqlConnection(ConnString))
             {
                 connection.Open();
 
@@ -223,7 +224,7 @@ namespace Auto_parking
             DateTime thoigian = DateTime.Now;
             DataTable data = new DataTable();
             string query = "EXEC Proc_GetSystemHistoryData";
-            using (SqlConnection connection = new SqlConnection(connString))
+            using (SqlConnection connection = new SqlConnection(ConnString))
             {
                 connection.Open();
                 SqlDataAdapter adapter = new SqlDataAdapter(query, connection);
@@ -246,7 +247,7 @@ namespace Auto_parking
 
             //sqlconnection
             string query = "select * from SystemPlate WHERE CarPlate = '" + bienso + "'";
-            using (SqlConnection connection = new SqlConnection(connString))
+            using (SqlConnection connection = new SqlConnection(ConnString))
             {
                 connection.Open();
 
@@ -267,7 +268,7 @@ namespace Auto_parking
 
             //sqlconnection
             string query = "select CarPlate, UserName, PhoneNumber, Address from SystemPlate";
-            using (SqlConnection connection = new SqlConnection(connString))
+            using (SqlConnection connection = new SqlConnection(ConnString))
             {
                 connection.Open();
 
@@ -288,7 +289,7 @@ namespace Auto_parking
             DataTable dt = new DataTable();
             //sqlconnection
             string query = "select * from CurentSystemData WHERE CarNumber = '" + bienso + "'";
-            using (SqlConnection connection = new SqlConnection(connString))
+            using (SqlConnection connection = new SqlConnection(ConnString))
             {
                 connection.Open();
 
@@ -308,7 +309,7 @@ namespace Auto_parking
         /// <param name="Phone"></param>
         public void Add_SystemPlate(string CarPlate, string User, string Address, string Phone)
         {
-            using (SqlConnection connection = new SqlConnection(connString))
+            using (SqlConnection connection = new SqlConnection(ConnString))
             {
                 connection.Open();
 
@@ -330,7 +331,7 @@ namespace Auto_parking
             string query1 = "delete SystemHistoryData";
             string query2 = "delete CurentSystemData";
 
-            using (SqlConnection connection = new SqlConnection(connString))
+            using (SqlConnection connection = new SqlConnection(ConnString))
             {
                 connection.Open();
 
@@ -352,7 +353,7 @@ namespace Auto_parking
             string query = "delete SystemPlate Where CarPlate = N'" + CarPlate + "'";
             
 
-            using (SqlConnection connection = new SqlConnection(connString))
+            using (SqlConnection connection = new SqlConnection(ConnString))
             {
                 connection.Open();
 

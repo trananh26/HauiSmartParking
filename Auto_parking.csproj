@@ -69,6 +69,14 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="frmSetting.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="frmSetting.Designer.cs">
+      <DependentUpon>frmSetting.cs</DependentUpon>
+    </Compile>
+    <Compile Include="Models\AppConfiguration.cs" />
+    <Compile Include="Utils\ConfigurationManager.cs" />
     <Compile Include="Utils\LicensePlateRecognizer.cs" />
     <Compile Include="Utils\BitmapExtension.cs" />
     <Compile Include="Database\clsCommon.cs" />
@@ -125,6 +133,7 @@
       <SubType>Designer</SubType>
       <LastGenOutput>Resources.Designer.cs</LastGenOutput>
     </EmbeddedResource>
+    <None Include="App_Data\appsettings.json" />
     <None Include="App_Data\data\eng.traineddata">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
@@ -208,6 +217,7 @@
     <PackageReference Include="Microsoft.Office.Interop.Excel">
       <Version>16.0.18925.20022</Version>
     </PackageReference>
+    <PackageReference Include="Newtonsoft.Json" Version="13.0.3" />
     <PackageReference Include="System.Drawing.Common">
       <Version>9.0.10</Version>
     </PackageReference>
